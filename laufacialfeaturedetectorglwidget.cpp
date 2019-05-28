@@ -43,6 +43,18 @@ LAUFacialFeatureDetectorGLWidget::~LAUFacialFeatureDetectorGLWidget()
         if (frameBufferObject) {
             delete frameBufferObject;
         }
+        if (faceDetector) {
+            faceDetector.release();
+            delete faceDetector;
+        }
+        if (facemark) {
+            facemark.release();
+            delete facemark;
+        }
+        if (subDivide) {
+            subDivide.release();
+            delete subDivide;
+        }
     }
     qDebug() << "LAUFacialFeatureDetectorGLWidget::~LAUFacialFeatureDetectorGLWidget()";
 }

@@ -23,6 +23,14 @@ public:
     }
     ~LAUHarrisCornerDetectorGLWidget();
 
+    QImage grabImage()
+    {
+        if (frameBufferObjects[4]) {
+            return (frameBufferObjects[4]->toImage());
+        }
+        return (QImage());
+    }
+
     void setScaleFactor(float val)
     {
         qtScaleFactor = val;

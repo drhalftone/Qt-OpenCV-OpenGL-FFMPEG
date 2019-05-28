@@ -8,7 +8,7 @@ LAUSobelEdgeDetectorGLWidget::~LAUSobelEdgeDetectorGLWidget()
 {
     if (wasInitialized()) {
         makeCurrent();
-        delete frameBufferObjects;
+        delete frameBufferObject;
     }
     qDebug() << "LAUSobelEdgeDetectorGLWidget::~LAUSobelEdgeDetectorGLWidget()";
 }
@@ -20,32 +20,32 @@ void LAUSobelEdgeDetectorGLWidget::process()
 {
     // SEE IF WE NEED NEW FBOS
     if (videoTexture) {
-        if (frameBufferObjects == NULL) {
+        if (frameBufferObject == NULL) {
             // CREATE A FORMAT OBJECT FOR CREATING THE FRAME BUFFER
             QOpenGLFramebufferObjectFormat frameBufferObjectFormat;
             frameBufferObjectFormat.setInternalTextureFormat(GL_RGBA32F);
 
-            frameBufferObjects = new QOpenGLFramebufferObject(videoTexture->width(), videoTexture->height(), frameBufferObjectFormat);
-            frameBufferObjects->release();
-        } else if (frameBufferObjects->width() != videoTexture->width() || frameBufferObjects->height() != videoTexture->height()) {
-            delete frameBufferObjects;
+            frameBufferObject = new QOpenGLFramebufferObject(videoTexture->width(), videoTexture->height(), frameBufferObjectFormat);
+            frameBufferObject->release();
+        } else if (frameBufferObject->width() != videoTexture->width() || frameBufferObject->height() != videoTexture->height()) {
+            delete frameBufferObject;
 
             // CREATE A FORMAT OBJECT FOR CREATING THE FRAME BUFFER
             QOpenGLFramebufferObjectFormat frameBufferObjectFormat;
             frameBufferObjectFormat.setInternalTextureFormat(GL_RGBA32F);
 
-            frameBufferObjects = new QOpenGLFramebufferObject(videoTexture->width(), videoTexture->height(), frameBufferObjectFormat);
-            frameBufferObjects->release();
+            frameBufferObject = new QOpenGLFramebufferObject(videoTexture->width(), videoTexture->height(), frameBufferObjectFormat);
+            frameBufferObject->release();
         }
 
         // SET CLEAR COLOR AS NOT A NUMBERS
         glClearColor(NAN, NAN, NAN, NAN);
 
         // CALCULATE THE GRADIENT BUFFER
-        if (frameBufferObjects->bind()) {
+        if (frameBufferObject->bind()) {
             if (programA.bind()) {
                 // CLEAR THE FRAME BUFFER OBJECT
-                glViewport(1, 1, frameBufferObjects->width() - 2, frameBufferObjects->height() - 2);
+                glViewport(1, 1, frameBufferObject->width() - 2, frameBufferObject->height() - 2);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 // BIND VBOS FOR DRAWING TRIANGLES ON SCREEN
@@ -68,7 +68,7 @@ void LAUSobelEdgeDetectorGLWidget::process()
                 }
                 programA.release();
             }
-            frameBufferObjects->release();
+            frameBufferObject->release();
         }
     }
 }
@@ -93,7 +93,7 @@ void LAUSobelEdgeDetectorGLWidget::initialize()
 /****************************************************************************/
 void LAUSobelEdgeDetectorGLWidget::paint()
 {
-    if (frameBufferObjects == NULL) {
+    if (frameBufferObject == NULL) {
         LAUVideoGLWidget::paint();
     } else {
         // SET THE VIEW PORT AND CLEAR THE SCREEN BUFFER
@@ -107,7 +107,7 @@ void LAUSobelEdgeDetectorGLWidget::paint()
                     if (quadIndexBuffer.bind()) {
                         // SET THE ACTIVE TEXTURE ON THE GPU
                         glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, frameBufferObjects->texture());
+                        glBindTexture(GL_TEXTURE_2D, frameBufferObject->texture());
                         program.setUniformValue("qt_texture", 0);
 
                         // TELL OPENGL PROGRAMMABLE PIPELINE HOW TO LOCATE VERTEX POSITION DATA

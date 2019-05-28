@@ -13,15 +13,23 @@ class LAUSobelEdgeDetectorGLWidget : public LAUVideoGLWidget
 {
 
 public:
-    explicit LAUSobelEdgeDetectorGLWidget(QWidget *parent = NULL) : LAUVideoGLWidget(parent), frameBufferObjects(NULL) { ; }
+    explicit LAUSobelEdgeDetectorGLWidget(QWidget *parent = NULL) : LAUVideoGLWidget(parent), frameBufferObject(NULL) { ; }
     ~LAUSobelEdgeDetectorGLWidget();
+
+    QImage grabImage()
+    {
+        if (frameBufferObject) {
+            return (frameBufferObject->toImage());
+        }
+        return (QImage());
+    }
 
     void initialize();
     void process();
     void paint();
 
 private:
-    QOpenGLFramebufferObject *frameBufferObjects;
+    QOpenGLFramebufferObject *frameBufferObject;
     QOpenGLShaderProgram programA;
 };
 #endif // LAUSOBELEDGEDETECTORGLWIDGET_H

@@ -10,23 +10,23 @@ LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *pa
 
     // ASK THE USER WHAT FILTER THEY WANT TO IMPLEMENT
     QStringList items;
+    items << QString("Facial Features");
     items << QString("Harris Corners");
     items << QString("Randomized Pixels");
-    items << QString("Sobel Edges");
-    items << QString("Facial Features");
     items << QString("Raw Video");
+    items << QString("Sobel Edges");
     QString string = QInputDialog::getItem(nullptr, QString("Web Camera Widget"), QString("Select video filter"), items);
 
-    if (string == QString("Harris Corners")) {
+    if (string == QString("Facial Features")) {
+        label = new LAUFacialFeatureDetectorGLWidget();
+    } else if (string == QString("Harris Corners")) {
         label = new LAUHarrisCornerDetectorGLWidget();
     } else if (string == QString("Randomized Pixels")) {
         label = new LAURandomizePixelsGLWidget();
-    } else if (string == QString("Sobel Edges")) {
-        label = new LAUSobelEdgeDetectorGLWidget();
-    } else if (string == QString("Facial Features")) {
-        label = new LAUFacialFeatureDetectorGLWidget();
     } else if (string == QString("Raw Video")) {
         label = new LAUVideoGLWidget();
+    } else if (string == QString("Sobel Edges")) {
+        label = new LAUSobelEdgeDetectorGLWidget();
     }
     label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->layout()->addWidget(label);
@@ -54,8 +54,8 @@ LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *pa
 
         QCameraViewfinderSettings set = camera->viewfinderSettings();
         set.setResolution(LAUWEBCAMERAWIDGETWIDTH, LAUWEBCAMERAWIDGETHEIGHT);
-        set.setMaximumFrameRate(30.0f);
-        set.setMinimumFrameRate(30.0f);
+        set.setMaximumFrameRate(30.0);
+        set.setMinimumFrameRate(30.0);
         set.setPixelFormat(QVideoFrame::Format_ARGB32);
 
         camera->setViewfinderSettings(set);
@@ -135,17 +135,20 @@ void LAUWebCameraWidget::onImageAvailable(int id, QImage image)
 void LAUWebCameraWidget::grabImage()
 {
     if (label) {
-        QImage image = ((LAURandomizePixelsGLWidget *)label)->grabImage();
+        QImage image = label->grabImage();
         if (image.isNull() == false) {
             QSettings settings;
             QString directory = settings.value("LAUWebCameraWidget::lastUsedDirectory", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
-            QString fileName = QFileDialog::getSaveFileName(0, QString("Save image to disk (*.tif)"), directory, QString("*.tif *.tiff"));
-            if (fileName.isEmpty() == false) {
-                settings.setValue("LAUWebCameraWidget::lastUsedDirectory", QFileInfo(fileName).absolutePath());
+            QString filename = QFileDialog::getSaveFileName(0, QString("Save image to disk (*.tif)"), directory, QString("*.tif *.tiff"));
+            if (filename.isEmpty() == false) {
+                settings.setValue("LAUWebCameraWidget::lastUsedDirectory", QFileInfo(filename).absolutePath());
+                if (filename.toLower().endsWith(".tif") == false && filename.toLower().endsWith(".tiff")) {
+                    filename.append(".tif");
+                }
             } else {
                 return;
             }
-            image.save(fileName, "TIFF");
+            image.save(filename, "TIFF");
         }
     }
 }

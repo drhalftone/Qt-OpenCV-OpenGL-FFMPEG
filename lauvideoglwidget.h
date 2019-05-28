@@ -42,6 +42,19 @@ public:
     void setFrame(const QVideoFrame &frame);
     void setFrame(QImage frame);
 
+    virtual QImage grabImage()
+    {
+        if (videoTexture) {
+            makeCurrent();
+            QImage image(videoTexture->width(), videoTexture->height(), QImage::Format_RGBA8888);
+            videoTexture->bind();
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
+            videoTexture->release();
+            return (image);
+        }
+        return (QImage());
+    }
+
     virtual void process() { ; }
     virtual void initialize();
     virtual void resize(int w, int h);

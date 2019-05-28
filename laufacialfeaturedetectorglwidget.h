@@ -22,6 +22,14 @@ public:
     explicit LAUFacialFeatureDetectorGLWidget(QWidget *parent = nullptr);
     ~LAUFacialFeatureDetectorGLWidget();
 
+    QImage grabImage()
+    {
+        if (frameBufferObject) {
+            return (frameBufferObject->toImage());
+        }
+        return (QImage());
+    }
+
     void initialize();
     void process();
     void paint();
