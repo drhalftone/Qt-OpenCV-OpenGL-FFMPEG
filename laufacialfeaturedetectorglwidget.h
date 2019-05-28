@@ -3,6 +3,8 @@
 
 #include <QtCore>
 #include <QObject>
+#include <QSettings>
+#include <QFileDialog>
 
 #include "opencv2/face.hpp"
 #include "opencv2/core/core.hpp"

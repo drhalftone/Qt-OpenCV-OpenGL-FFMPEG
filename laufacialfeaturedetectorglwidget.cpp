@@ -10,15 +10,27 @@ using namespace cv::face;
 /****************************************************************************/
 LAUFacialFeatureDetectorGLWidget::LAUFacialFeatureDetectorGLWidget(QWidget *parent) : LAUVideoGLWidget(parent), frameBufferObject(nullptr), faceDetector(nullptr), subDivide(nullptr)
 {
-    faceDetector = new CascadeClassifier();
-    if (faceDetector->load("/Users/dllau/haarcascade_frontalface_alt2.xml")) {
-        qDebug() << "Loaded the face detector.";
-    }
-    facemark = FacemarkLBF::create();
-    facemark->loadModel("/Users/dllau/lbfmodel.yaml");
+    QSettings settings;
+    QString directory = settings.value("LAUFacialFeatureDetectorGLWidget::faceDetectorModel", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
+    QString string = QFileDialog::getOpenFileName(nullptr, QString("Load classifier..."), directory, QString("*.xml"));
+    if (string.isEmpty() == false) {
+        settings.setValue("LAUFacialFeatureDetectorGLWidget::faceDetectorModel", QFileInfo(string).absolutePath());
 
-    // CREATE SUBDIVIDE OBJECT FOR EXTRACTING VORONOI DIAGRAM
-    subDivide = new Subdiv2D();
+        faceDetector = new CascadeClassifier();
+        if (faceDetector->load(string.toStdString())) {
+            QString directory = settings.value("LAUFacialFeatureDetectorGLWidget::faceMarkModel", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
+            QString string = QFileDialog::getOpenFileName(nullptr, QString("Load classifier..."), directory, QString("*.yaml"));
+            if (string.isEmpty() == false) {
+                settings.setValue("LAUFacialFeatureDetectorGLWidget::faceMarkModel", QFileInfo(string).absolutePath());
+
+                facemark = FacemarkLBF::create();
+                facemark->loadModel(string.toStdString());
+
+                // CREATE SUBDIVIDE OBJECT FOR EXTRACTING VORONOI DIAGRAM
+                subDivide = new Subdiv2D();
+            }
+        }
+    }
 }
 
 /****************************************************************************/
