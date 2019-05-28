@@ -1,0 +1,44 @@
+<RCC>
+    <qresource prefix="/shaders">
+        <file>Shaders/filterHarrisCornersE.vert</file>
+        <file>Shaders/filterHarrisCornersE.frag</file>
+        <file>Shaders/filterHarrisCornersD.vert</file>
+        <file>Shaders/filterHarrisCornersD.frag</file>
+        <file>Shaders/filterHarrisCornersC.vert</file>
+        <file>Shaders/filterHarrisCornersC.frag</file>
+        <file>Shaders/filterHarrisCornersB.vert</file>
+        <file>Shaders/filterHarrisCornersB.frag</file>
+        <file>Shaders/filterHarrisCornersA.vert</file>
+        <file>Shaders/filterHarrisCornersA.frag</file>
+        <file>Shaders/displayRGBVideo.vert</file>
+        <file>Shaders/displayRGBVideo.frag</file>
+        <file>Shaders/filterRandomMappingB.vert</file>
+        <file>Shaders/filterRandomMappingB.frag</file>
+        <file>Shaders/filterRandomMappingA.frag</file>
+        <file>Shaders/filterRandomMappingA.vert</file>
+        <file>Shaders/filterBinaryMedian.vert</file>
+        <file>Shaders/filterBinaryMedian.frag</file>
+        <file>Shaders/filterAdaptiveThreshold.vert</file>
+        <file>Shaders/filterAdaptiveThreshold.frag</file>
+        <file>Shaders/filterYGaussian.vert</file>
+        <file>Shaders/filterYGaussian.frag</file>
+        <file>Shaders/filterXGaussian.vert</file>
+        <file>Shaders/filterXGaussian.frag</file>
+        <file>Shaders/filterRGBAtoGray.frag</file>
+        <file>Shaders/filterRGBAtoGray.vert</file>
+        <file>Shaders/filterSobelEdge.frag</file>
+        <file>Shaders/filterSobelEdge.vert</file>
+        <file>Shaders/filterBinaryLookUpTable.vert</file>
+        <file>Shaders/filterBinaryLookUpTable.frag</file>
+        <file>Shaders/filterMaxRGBA.vert</file>
+        <file>Shaders/filterMinRGBA.frag</file>
+        <file>Shaders/filterMinRGBA.vert</file>
+        <file>Shaders/filterMaxRGBA.frag</file>
+        <file>Shaders/displayCalTag.vert</file>
+        <file>Shaders/displayCalTag.frag</file>
+        <file>Shaders/calTagXYZW.frag</file>
+        <file>Shaders/calTagXYZW.vert</file>
+        <file>Shaders/filterDrawFace.vert</file>
+        <file>Shaders/filterDrawFace.frag</file>
+    </qresource>
+</RCC>
