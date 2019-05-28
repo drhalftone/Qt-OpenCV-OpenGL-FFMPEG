@@ -16,6 +16,6 @@ Here is an example of facial feature tracking.  For this to work, you will need 
 
 ![](https://github.com/drhalftone/Qt-OpenCV-OpenGL/blob/master/Images/ScreenShot05.jpg)
 
-Here is an example of randomly swapping pixels around (please note this takes a long time to launch):
+Here is an example of randomly swapping pixels around (please note this takes a long time to launch).  This purpose of this filter is to create a way to visualize the video frames color histogram without the psycho-visual effects of the scene.  So on the left, you have the raw video. On the right, I'm using a psuedo-random permutation/swapping of pixels from the raw video.
 
 ![](https://github.com/drhalftone/Qt-OpenCV-OpenGL/blob/master/Images/ScreenShot03.jpg)
