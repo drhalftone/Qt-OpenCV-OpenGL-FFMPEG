@@ -1,4 +1,4 @@
-Welcome to the Qt-OpenCV-OpenGL wiki! This is a Qt application that displays live video from your webcam, and applies various video processing routines, namely OpenCV filters. However, unlike OpenCV which is CUDA centric, this project makes use of OpenGL shaders to replace as much of the CPU-based OpenCV filters. Users should see this project as a teaching tool for building their own filters.
+Welcome to the Qt-OpenCV-OpenGL wiki! This is a Qt application that displays live video from your webcam, and applies various video processing routines, namely OpenCV filters. However, unlike OpenCV which is CUDA centric, this project makes use of OpenGL shaders to replace as much of the CPU-based OpenCV filters. Users should see this project as a teaching tool for building their own filters. It should be noted that all of these filters run at 30 fps.
 
 Here is an example of displaying raw video:
 
