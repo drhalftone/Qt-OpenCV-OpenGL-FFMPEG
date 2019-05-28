@@ -8,7 +8,26 @@ LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *pa
     this->setLayout(new QVBoxLayout());
     this->layout()->setContentsMargins(6, 6, 6, 6);
 
-    label = new LAUFacialFeatureDetectorGLWidget();
+    // ASK THE USER WHAT FILTER THEY WANT TO IMPLEMENT
+    QStringList items;
+    items << QString("Harris Corners");
+    items << QString("Randomized Pixels");
+    items << QString("Sobel Edges");
+    items << QString("Facial Features");
+    items << QString("Raw Video");
+    QString string = QInputDialog::getItem(nullptr, QString("Web Camera Widget"), QString("Select video filter"), items);
+
+    if (string == QString("Harris Corners")) {
+        label = new LAUHarrisCornerDetectorGLWidget();
+    } else if (string == QString("Randomized Pixels")) {
+        label = new LAURandomizePixelsGLWidget();
+    } else if (string == QString("Sobel Edges")) {
+        label = new LAUSobelEdgeDetectorGLWidget();
+    } else if (string == QString("Facial Features")) {
+        label = new LAUFacialFeatureDetectorGLWidget();
+    } else if (string == QString("Raw Video")) {
+        label = new LAUVideoGLWidget();
+    }
     label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->layout()->addWidget(label);
 

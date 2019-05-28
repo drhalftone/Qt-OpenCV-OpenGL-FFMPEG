@@ -82,8 +82,8 @@ void LAUSobelEdgeDetectorGLWidget::initialize()
 
     // NOW ADD OUR LIST OF HARRIS CORNER SHADER PROGRAMS
     setlocale(LC_NUMERIC, "C");
-    programA.addShaderFromSourceFile(QOpenGLShader::Vertex,   ":/shaders/Shaders/filterCalTagSobelEdge.vert");
-    programA.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/Shaders/filterCalTagSobelEdge.frag");
+    programA.addShaderFromSourceFile(QOpenGLShader::Vertex,   ":/shaders/Shaders/filterSobelEdge.vert");
+    programA.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/Shaders/filterSobelEdge.frag");
     programA.link();
     setlocale(LC_ALL, "");
 }

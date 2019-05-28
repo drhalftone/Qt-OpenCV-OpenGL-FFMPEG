@@ -28,8 +28,7 @@ SOURCES += \
         laufacialfeaturedetectorglwidget.cpp \
         lauharriscornerdetectorglwidget.cpp \
         laurandomizepixelsglwidget.cpp \
-        lausobeledgedetectorglwidget.cpp \
-        laucaltagglwidget.cpp
+        lausobeledgedetectorglwidget.cpp
 
 HEADERS += \
         lauwebcamerawidget.h \
@@ -38,9 +37,7 @@ HEADERS += \
         laufacialfeaturedetectorglwidget.h \
         lauharriscornerdetectorglwidget.h \
         laurandomizepixelsglwidget.h \
-        lausobeledgedetectorglwidget.h \
-        laucaltagglwidget.h \
-    laufacialfeaturedetectorglwidget.h
+        lausobeledgedetectorglwidget.h
 
 RESOURCES += lauwebcameracapture.qrc
 
