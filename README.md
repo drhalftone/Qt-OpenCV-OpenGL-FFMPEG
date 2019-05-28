@@ -12,7 +12,7 @@ Here is an example of Sobel edge detection:
 
 ![](https://github.com/drhalftone/Qt-OpenCV-OpenGL/blob/master/Images/ScreenShot02.jpg)
 
-Here is an example of facial feature tracking:
+Here is an example of facial feature tracking.  For this to work, you will need to also download the pre-trained face detector model (https://github.com/opencv/opencv/blob/master/data/haarcascades/haarcascade_frontalface_alt2.xml) and the pre-trained facial feature point model (https://github.com/kurnianggoro/GSOC2017/blob/master/data/lbfmodel.yaml).  You will be prompted by a file dialog to locate these files on you system.
 
 ![](https://github.com/drhalftone/Qt-OpenCV-OpenGL/blob/master/Images/ScreenShot05.jpg)
 
