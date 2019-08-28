@@ -1,14 +1,23 @@
 #include "laufacialfeaturedetectorglwidget.h"
 #include "locale.h"
 
+#include <QSettings>
+#include <QStandardPaths>
+#include <QFileDialog>
+#include <QFileInfo>
+
 using namespace std;
 using namespace cv;
 using namespace cv::face;
 
+#define NUMBEROFFACIALFEATURES    68
+#define NUMBEROFFACIALTRIANGLES  107
+unsigned int triangles[3 * NUMBEROFFACIALTRIANGLES] = { 67, 58, 59, 31, 32, 49, 58, 57, 7, 52, 34, 35, 45, 44, 25, 40, 39, 29, 18, 37, 36, 42, 22, 43, 59, 48, 60, 1, 36, 41, 61, 50, 51, 52, 53, 63, 65, 56, 66, 67, 61, 62, 55, 10, 56, 57, 9, 8, 27, 28, 39, 33, 52, 51, 53, 55, 65, 65, 66, 62, 42, 28, 27, 35, 46, 14, 20, 37, 19, 19, 37, 18, 0, 36, 1, 17, 18, 36, 20, 38, 37, 20, 21, 38, 38, 21, 39, 43, 23, 44, 34, 30, 35, 39, 21, 27, 29, 28, 42, 29, 39, 28, 33, 30, 34, 29, 31, 40, 30, 29, 35, 30, 32, 31, 17, 36, 0, 49, 48, 31, 30, 31, 29, 41, 2, 1, 48, 3, 2, 31, 48, 2, 59, 58, 6, 48, 4, 3, 48, 5, 4, 48, 59, 5, 5, 59, 6, 67, 66, 58, 58, 7, 6, 60, 49, 59, 33, 32, 30, 59, 49, 67, 60, 48, 49, 41, 31, 2, 41, 40, 31, 49, 61, 67, 49, 32, 50, 33, 50, 32, 61, 49, 50, 63, 62, 51, 62, 61, 51, 52, 63, 51, 66, 67, 62, 35, 53, 52, 65, 62, 63, 66, 57, 58, 56, 9, 57, 57, 8, 7, 66, 56, 57, 65, 63, 53, 65, 55, 56, 53, 64, 55, 56, 10, 9, 55, 11, 10, 54, 64, 53, 64, 54, 55, 35, 54, 53, 54, 11, 55, 14, 54, 35, 13, 12, 54, 54, 12, 11, 47, 29, 42, 54, 14, 13, 46, 15, 14, 52, 33, 34, 51, 50, 33, 22, 42, 27, 47, 35, 29, 22, 23, 43, 46, 35, 47, 21, 22, 27, 24, 44, 23, 25, 44, 24, 16, 45, 26, 15, 46, 45, 45, 25, 26, 45, 16, 15 };
+
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
-LAUFacialFeatureDetectorGLWidget::LAUFacialFeatureDetectorGLWidget(QWidget *parent) : LAUVideoGLWidget(parent), frameBufferObject(nullptr), faceDetector(nullptr), subDivide(nullptr)
+LAUFacialFeatureDetectorGLWidget::LAUFacialFeatureDetectorGLWidget(QWidget *parent) : LAUVideoGLWidget(parent), contextMenu(nullptr), frameBufferObject(nullptr), faceDetector(nullptr), subDivide(nullptr)
 {
     QSettings settings;
     QString directory = settings.value("LAUFacialFeatureDetectorGLWidget::faceDetectorModel", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
@@ -31,6 +40,10 @@ LAUFacialFeatureDetectorGLWidget::LAUFacialFeatureDetectorGLWidget(QWidget *pare
             }
         }
     }
+
+    contextMenu = new QMenu(QString("Load Template Face"));
+    QAction *action = contextMenu->addAction(QString("Load Template Face"));
+    connect(action, SIGNAL(triggered()), this, SLOT(onLoadFaceImageFromDisk()));
 }
 
 /****************************************************************************/
@@ -56,6 +69,11 @@ LAUFacialFeatureDetectorGLWidget::~LAUFacialFeatureDetectorGLWidget()
             delete subDivide;
         }
     }
+
+    if (contextMenu) {
+        delete contextMenu;
+    }
+
     qDebug() << "LAUFacialFeatureDetectorGLWidget::~LAUFacialFeatureDetectorGLWidget()";
 }
 
@@ -132,15 +150,15 @@ void LAUFacialFeatureDetectorGLWidget::process()
             glBindTexture(GL_TEXTURE_2D, frameBufferObject->texture());
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, grayFrame.data);
 
-            videoTexture->bind();
-            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, videoFrame.data);
+            //videoTexture->bind();
+            //glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, videoFrame.data);
 
             // CREATE A VECTOR OF RECTANGLES TO HOLD ONE RECTANGLE PER FACE
             vector<Rect> faces;
             faceDetector->detectMultiScale(grayFrame, faces);
 
             // LETS KEEP TRACK OF HOW MANY FACE TRIANGLES WE NEED TO DRAW LATER
-            int numFaceTriangles = 0;
+            int numLandmarks = 0;
 
             // NEW SEE IF FOUND AT LEAST ONE FACE
             if (faces.size() > 0) {
@@ -148,69 +166,36 @@ void LAUFacialFeatureDetectorGLWidget::process()
                 vector< vector<Point2f> > landmarks;
                 bool success = facemark->fit(grayFrame, faces, landmarks);
                 if (success) {
-                    for (int n = 0; n < landmarks.size(); n++) {
-                        // Draws voronoi diagram
-                        vector< vector<Point2f> > facetList;
-                        vector<Point2f> facetCenters;
+                    videoTexture->setData(QOpenGLTexture::RGB, QOpenGLTexture::UInt8, (const void *)videoFrame.data);
 
-                        // PREPARE THE SUBDIVIDE OBJECT FOR THE CURRENT FRAME SIZE
-                        subDivide->initDelaunay(Rect(-videoTexture->width() / 2, -videoTexture->height() / 2, 2 * videoTexture->width(), 2 * videoTexture->height()));
-                        for (int m = 0; m < landmarks.at(n).size(); m++) {
-                            subDivide->insert(landmarks.at(n).at(m));
-                        }
+                    // GET A COPY OF THE JUST DETECTED FACIAL FEATURE COORDINATES
+                    vector<Point2f> features = landmarks.at(0);
 
-                        // PUSH THE FOUR CORNERS OF THE VIDEO TEXTURE
-                        //subDivide->insert(Point2f(1, 1));
-                        //subDivide->insert(Point2f(1, videoTexture->height() - 1));
-                        //subDivide->insert(Point2f(videoTexture->width() - 1, 1));
-                        //subDivide->insert(Point2f(videoTexture->width() - 1, videoTexture->height() - 1));
+                    // GET THE NUMBER OF LANDMARKS BETWEEN THIS AND TEMPLATE
+                    numLandmarks = qMin(features.size(), templateList.size());
 
-                        // DRAW THE FACE TRIANGLES ON THE VIDEO FRAME
-                        std::vector< Vec6f > triangleList;
-                        subDivide->getTriangleList(triangleList);
-                        for (n = 0; n < triangleList.size(); n++) {
-                            line(videoFrame, Point2f(triangleList.at(n)[0], triangleList.at(n)[1]), Point2f(triangleList.at(n)[2], triangleList.at(n)[3]), Scalar(0, 0, 255), 1, 8, 0);
-                            line(videoFrame, Point2f(triangleList.at(n)[2], triangleList.at(n)[3]), Point2f(triangleList.at(n)[4], triangleList.at(n)[5]), Scalar(0, 0, 255), 1, 8, 0);
-                            line(videoFrame, Point2f(triangleList.at(n)[4], triangleList.at(n)[5]), Point2f(triangleList.at(n)[0], triangleList.at(n)[1]), Scalar(0, 0, 255), 1, 8, 0);
-                        }
-                        videoTexture->setData(QOpenGLTexture::RGB, QOpenGLTexture::UInt8, (const void *)videoFrame.data);
-                        numFaceTriangles = triangleList.size();
-
-                        // COPY FACE TRIANGLE VERTICES TO THE GPU FOR DRAWING
-                        if (numFaceTriangles > 0 && faceVertexBuffer.bind()) {
-                            float *buffer = (float *)faceVertexBuffer.mapRange(0, 12 * numFaceTriangles * sizeof(float), QOpenGLBuffer::RangeWrite);
-                            if (buffer) {
-                                for (n = 0; n < triangleList.size(); n++) {
-                                    // INSERT FIRST OF THREE VERTICES (INPUT AND OUTPUT POINTS)
-                                    buffer[12 * n + 0] = triangleList.at(n)[0];
-                                    buffer[12 * n + 1] = triangleList.at(n)[1];
-                                    buffer[12 * n + 2] = triangleList.at(n)[0];
-                                    buffer[12 * n + 3] = triangleList.at(n)[1];
-
-                                    // INSERT SECOND OF THREE VERTICES (INPUT AND OUTPUT POINTS)
-                                    buffer[12 * n + 4] = triangleList.at(n)[2];
-                                    buffer[12 * n + 5] = triangleList.at(n)[3];
-                                    buffer[12 * n + 6] = triangleList.at(n)[2];
-                                    buffer[12 * n + 7] = triangleList.at(n)[3];
-
-                                    // INSERT THIRD OF THREE VERTICES (INPUT AND OUTPUT POINTS)
-                                    buffer[12 * n + 8] = triangleList.at(n)[4];
-                                    buffer[12 * n + 9] = triangleList.at(n)[5];
-                                    buffer[12 * n + 10] = triangleList.at(n)[4];
-                                    buffer[12 * n + 11] = triangleList.at(n)[5];
-                                }
-                                faceVertexBuffer.unmap();
-                            } else {
-                                qDebug() << QString("faceVertexBuffer not mapped to CPU.") << glGetError();
+                    // COPY FACE TRIANGLE VERTICES TO THE GPU FOR DRAWING
+                    if (numLandmarks == NUMBEROFFACIALFEATURES && faceVertexBuffer.bind()) {
+                        float *buffer = (float *)faceVertexBuffer.mapRange(0, 4 * NUMBEROFFACIALFEATURES * sizeof(float), QOpenGLBuffer::RangeWrite);
+                        if (buffer) {
+                            for (int n = 0; n < numLandmarks; n++) {
+                                // INSERT FIRST OF THREE VERTICES (INPUT AND OUTPUT POINTS)
+                                buffer[4 * n + 0] = features.at(n).x;
+                                buffer[4 * n + 1] = features.at(n).y;
+                                buffer[4 * n + 2] = templateList.at(n).x;
+                                buffer[4 * n + 3] = templateList.at(n).y;
                             }
-                            faceVertexBuffer.release();
+                            faceVertexBuffer.unmap();
+                        } else {
+                            qDebug() << QString("faceVertexBuffer not mapped to CPU.") << glGetError();
                         }
+                        faceVertexBuffer.release();
                     }
                 }
             }
 
             // CHECK TO SEE IF WE HAVE ANY FACES TO DRAW
-            if (numFaceTriangles > 0) {
+            if (numLandmarks == NUMBEROFFACIALFEATURES) {
                 // CONVERT THE RGB TEXTURE INTO GRAYSCALE
                 if (frameBufferObject->bind()) {
                     if (programB.bind()) {
@@ -220,7 +205,7 @@ void LAUFacialFeatureDetectorGLWidget::process()
                         // BIND VBOS FOR DRAWING TRIANGLES ON SCREEN
                         if (faceVertexBuffer.bind()) {
                             if (faceIndexBuffer.bind()) {
-                                qDebug() << "Drawing face triangles" << numFaceTriangles;
+                                qDebug() << "Drawing face triangles" << numLandmarks;
 
                                 // BIND THE INCOMING RGB VIDEO FRAME AS A TEXTURE
                                 glActiveTexture(GL_TEXTURE0);
@@ -233,7 +218,7 @@ void LAUFacialFeatureDetectorGLWidget::process()
                                 // TELL OPENGL PROGRAMMABLE PIPELINE HOW TO LOCATE VERTEX POSITION DATA
                                 glVertexAttribPointer(programB.attributeLocation("qt_vertex"), 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
                                 programB.enableAttributeArray("qt_vertex");
-                                glDrawElements(GL_TRIANGLES, 3 * numFaceTriangles, GL_UNSIGNED_INT, nullptr);
+                                glDrawElements(GL_TRIANGLES, 3 * NUMBEROFFACIALTRIANGLES, GL_UNSIGNED_INT, nullptr);
 
                                 // RELEASE THE FRAME BUFFER OBJECT AND ITS ASSOCIATED GLSL PROGRAMS
                                 faceIndexBuffer.release();
@@ -263,7 +248,7 @@ void LAUFacialFeatureDetectorGLWidget::initialize()
     faceVertexBuffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
     if (faceVertexBuffer.bind()) {
         // ALLOCATE THE VERTEX BUFFER FOR HOLDING ENOUGH VEC4 FOR TWO FACES (SOURCE AND DESTINATION POINTS)
-        faceVertexBuffer.allocate(200 * 12 * sizeof(float));
+        faceVertexBuffer.allocate(NUMBEROFFACIALFEATURES * 4 * sizeof(float));
         faceVertexBuffer.release();
     }
 
@@ -272,14 +257,10 @@ void LAUFacialFeatureDetectorGLWidget::initialize()
     faceIndexBuffer.create();
     faceIndexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
     if (faceIndexBuffer.bind()) {
-        faceIndexBuffer.allocate(200 * 3 * sizeof(unsigned int));
+        faceIndexBuffer.allocate(339 * sizeof(unsigned int));
         unsigned int *indices = (unsigned int *)faceIndexBuffer.map(QOpenGLBuffer::WriteOnly);
         if (indices) {
-            for (int n = 0; n < 200; n++) {
-                indices[3 * n + 0] = 3 * n + 0;
-                indices[3 * n + 1] = 3 * n + 1;
-                indices[3 * n + 2] = 3 * n + 2;
-            }
+            memcpy(indices, triangles, 3 * NUMBEROFFACIALTRIANGLES * sizeof(unsigned int));
             faceIndexBuffer.unmap();
         } else {
             qDebug() << QString("indiceBufferA buffer mapped from GPU.");
@@ -332,6 +313,51 @@ void LAUFacialFeatureDetectorGLWidget::paint()
                     quadVertexBuffer.release();
                 }
                 program.release();
+            }
+        }
+    }
+}
+
+/****************************************************************************/
+/****************************************************************************/
+/****************************************************************************/
+void LAUFacialFeatureDetectorGLWidget::onLoadFaceImageFromDisk()
+{
+    QSettings settings;
+    QString directory = settings.value("LAUFacialFeatureDetectorGLWidget::lastUsedDirectory", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
+    QString filename = QFileDialog::getOpenFileName(0, QString("Load scan from disk (*.tif)"), directory, QString("*.tif;*.tiff"));
+    if (filename.isEmpty() == false) {
+        settings.setValue("LAUFacialFeatureDetectorGLWidget::lastUsedDirectory", QFileInfo(filename).absolutePath());
+    } else {
+        return;
+    }
+
+    QImage image(filename);
+    if (image.isNull() == false) {
+        image = image.scaled(videoFrame.cols, videoFrame.rows);
+        image = image.convertToFormat(QImage::Format_RGB888);
+        for (int row = 0; row < videoFrame.rows; row++) {
+            for (int col = 0; col < videoFrame.cols; col++) {
+                memcpy(videoFrame.ptr(row), image.constScanLine(row), qMin(static_cast<int>(videoFrame.cols * videoFrame.elemSize()), static_cast<int>(image.bytesPerLine())));
+            }
+        }
+
+        image = image.convertToFormat(QImage::Format_Grayscale8);
+        for (int row = 0; row < grayFrame.rows; row++) {
+            memcpy(grayFrame.ptr(row), image.constScanLine(row), qMin(static_cast<int>(grayFrame.cols * grayFrame.elemSize()), static_cast<int>(image.bytesPerLine())));
+        }
+
+        // CREATE A VECTOR OF RECTANGLES TO HOLD ONE RECTANGLE PER FACE
+        vector<Rect> faces;
+        faceDetector->detectMultiScale(grayFrame, faces);
+
+        // NEW SEE IF FOUND EXACTLY ONE FACE
+        if (faces.size() == 1) {
+            // CREATE A VECTOR TO HOLD THE LANDMARKS FOR EACH DETECTED FACE
+            vector< vector<Point2f> > landmarks;
+            bool success = facemark->fit(grayFrame, faces, landmarks);
+            if (success) {
+                templateList = landmarks.at(0);
             }
         }
     }

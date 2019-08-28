@@ -46,6 +46,8 @@ unix:macx {
     INCLUDEPATH   += /usr/local/include/opencv4
     DEPENDPATH    += /usr/local/include/opencv4
     LIBS          += -L/usr/local/lib -lopencv_core -lopencv_objdetect -lopencv_imgproc -lopencv_calib3d -lopencv_highgui -lopencv_ml -lopencv_face
+
+    QMAKE_INFO_PLIST = Info.plist
 }
 
 unix:!macx {

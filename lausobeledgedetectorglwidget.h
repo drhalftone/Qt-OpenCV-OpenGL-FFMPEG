@@ -11,6 +11,7 @@
 /****************************************************************************/
 class LAUSobelEdgeDetectorGLWidget : public LAUVideoGLWidget
 {
+    Q_OBJECT
 
 public:
     explicit LAUSobelEdgeDetectorGLWidget(QWidget *parent = NULL) : LAUVideoGLWidget(parent), frameBufferObject(NULL) { ; }
