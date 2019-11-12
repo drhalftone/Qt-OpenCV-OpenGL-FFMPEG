@@ -26,8 +26,8 @@
 #include "lauharriscornerdetectorglwidget.h"
 #include "laufacialfeaturedetectorglwidget.h"
 
-#define LAUWEBCAMERAWIDGETWIDTH  320
-#define LAUWEBCAMERAWIDGETHEIGHT 240
+#define LAUWEBCAMERAWIDGETWIDTH  640
+#define LAUWEBCAMERAWIDGETHEIGHT 480
 
 /****************************************************************************/
 /****************************************************************************/
