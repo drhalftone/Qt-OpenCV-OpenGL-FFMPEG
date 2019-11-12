@@ -226,9 +226,9 @@ void LAUVideoGLWidget::paint()
                     videoTexture->bind();
                     program.setUniformValue("qt_texture", 0);
 #ifdef Q_OS_WIN
-                    program.setUniformValue("qt_flip", -1.0f);
+                    program.setUniformValue("qt_flip", true);
 #else
-                    program.setUniformValue("qt_flip", -1.0f);
+                    program.setUniformValue("qt_flip", false);
 #endif
                     // TELL OPENGL PROGRAMMABLE PIPELINE HOW TO LOCATE VERTEX POSITION DATA
                     program.setAttributeBuffer("qt_vertex", GL_FLOAT, 0, 4, 4 * sizeof(float));
