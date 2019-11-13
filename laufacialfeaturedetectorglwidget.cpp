@@ -24,7 +24,7 @@ LAUFacialFeatureDetectorGLWidget::LAUFacialFeatureDetectorGLWidget(QWidget *pare
         settings.setValue("LAUFacialFeatureDetectorGLWidget::licenseKey", QFileInfo(string).absolutePath());
 
         visageFeaturesDetector = new VisageFeaturesDetector();
-        visageFeaturesDetector->Initialize("/Users/dllau/SourceTree/visageSDK-macOS/475-843-207-050-898-514-922-281-440-122-982.vlc"); //string.toLatin1());
+        visageFeaturesDetector->Initialize("./475-843-207-050-898-514-922-281-440-122-982.vlc");
     }
 #else
     faceDetector = nullptr;

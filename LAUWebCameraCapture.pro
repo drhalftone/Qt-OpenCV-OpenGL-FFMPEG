@@ -44,13 +44,6 @@ HEADERS += \
 
 RESOURCES += lauwebcameracapture.qrc
 
-visage {
-    DEFINES += USEVISAGE
-    INCLUDEPATH += $$PWD/../visageSDK-macOS/include
-    DEPENDPATH += $$PWD/../visageSDK-macOS/include
-    LIBS += -framework CoreFoundation -framework Foundation -framework AppKit -framework Accelerate -L$$PWD/../visageSDK-macOS/lib -lVisageAnalyser -lVisageGaze -lVisageVision
-}
-
 unix:macx {
     CONFIG        += c++11
     INCLUDEPATH   += /usr/local/include/opencv4
@@ -58,6 +51,13 @@ unix:macx {
     LIBS          += -L/usr/local/lib -lopencv_core -lopencv_objdetect -lopencv_imgproc -lopencv_calib3d -lopencv_highgui -lopencv_ml -lopencv_face
 
     QMAKE_INFO_PLIST = Info.plist
+
+    visage {
+        DEFINES += USEVISAGE
+        INCLUDEPATH += $$PWD/../visageSDK-macOS/include
+        DEPENDPATH += $$PWD/../visageSDK-macOS/include
+        LIBS += -framework CoreFoundation -framework Foundation -framework AppKit -framework Accelerate -L$$PWD/../visageSDK-macOS/lib -lVisageAnalyser -lVisageGaze -lVisageVision
+    }
 }
 
 unix:!macx {
@@ -77,4 +77,11 @@ win32 {
     LIBS          += -L$$quote(C:/usr/opencv/x64/vc15/lib)
     CONFIG(release, debug|release): LIBS += -lopencv_core411 -lopencv_objdetect411 -lopencv_imgproc411 -lopencv_calib3d411 -lopencv_highgui411 -lopencv_ml411 -lopencv_face411
     CONFIG(debug, debug|release):   LIBS += -lopencv_core411d -lopencv_objdetect411d -lopencv_imgproc411d -lopencv_calib3d411d -lopencv_highgui411d -lopencv_ml411d -lopencv_face411d
+
+    visage {
+        DEFINES += USEVISAGE
+        INCLUDEPATH   += $$quote(C:/usr/visageSDK/include)
+        DEPENDPATH    += $$quote(C:/usr/visageSDK/include)
+        LIBS += -L$$quote(C:/usr/visageSDK/lib) -llibVisageAnalyser64 -llibVisageGaze64 -llibVisageVision64
+    }
 }
