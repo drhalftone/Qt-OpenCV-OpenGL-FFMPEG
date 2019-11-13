@@ -11,6 +11,7 @@
 /****************************************************************************/
 class LAUHarrisCornerDetectorGLWidget : public LAUVideoGLWidget
 {
+    Q_OBJECT
 
 public:
     explicit LAUHarrisCornerDetectorGLWidget(QWidget *parent = NULL) : LAUVideoGLWidget(parent)

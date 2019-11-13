@@ -11,6 +11,7 @@
 /****************************************************************************/
 class LAURandomizePixelsGLWidget : public LAUVideoGLWidget
 {
+    Q_OBJECT
 
 public:
     explicit LAURandomizePixelsGLWidget(QWidget *parent = NULL) : LAUVideoGLWidget(parent), mapTexture(NULL), frameBufferObject(NULL)

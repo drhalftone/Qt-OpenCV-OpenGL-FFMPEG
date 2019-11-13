@@ -52,7 +52,7 @@ void LAUVideoGLWidget::setFrame(const QVideoFrame &frame)
         // UPLOAD THE CPU BUFFER TO THE GPU TEXTURE
         // COPY FRAME BUFFER TEXTURE FROM GPU TO LOCAL CPU BUFFER
         QVideoFrame::PixelFormat format = localFrame.pixelFormat();
-        if (format == QVideoFrame::Format_ARGB32) {
+        if (format == QVideoFrame::Format_ARGB32 || format == QVideoFrame::Format_RGB32) {
             unsigned int bytesPerSample = localFrame.bytesPerLine() / localFrame.width() / 4;
             if (bytesPerSample == sizeof(unsigned char)) {
                 videoTexture->setData(QOpenGLTexture::BGRA, QOpenGLTexture::UInt8, (const void *)localFrame.bits());
@@ -225,7 +225,11 @@ void LAUVideoGLWidget::paint()
                     glActiveTexture(GL_TEXTURE0);
                     videoTexture->bind();
                     program.setUniformValue("qt_texture", 0);
-
+#ifdef Q_OS_WIN
+                    program.setUniformValue("qt_flip", true);
+#else
+                    program.setUniformValue("qt_flip", false);
+#endif
                     // TELL OPENGL PROGRAMMABLE PIPELINE HOW TO LOCATE VERTEX POSITION DATA
                     program.setAttributeBuffer("qt_vertex", GL_FLOAT, 0, 4, 4 * sizeof(float));
                     program.enableAttributeArray("qt_vertex");
