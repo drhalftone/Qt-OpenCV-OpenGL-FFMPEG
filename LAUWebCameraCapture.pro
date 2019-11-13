@@ -4,6 +4,8 @@
 #
 #-------------------------------------------------
 
+CONFIG += visage
+
 QT += core gui multimedia widgets multimediawidgets opengl
 TARGET = LAUWebCamerarCapture
 TEMPLATE = app
@@ -19,6 +21,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+QMAKE_CXXFLAGS += -fdeclspec
 
 SOURCES += \
         main.cpp \
@@ -40,6 +43,13 @@ HEADERS += \
         lausobeledgedetectorglwidget.h
 
 RESOURCES += lauwebcameracapture.qrc
+
+visage {
+    DEFINES += USEVISAGE
+    INCLUDEPATH += $$PWD/../visageSDK-macOS/include
+    DEPENDPATH += $$PWD/../visageSDK-macOS/include
+    LIBS += -framework CoreFoundation -framework Foundation -framework AppKit -framework Accelerate -L$$PWD/../visageSDK-macOS/lib -lVisageAnalyser -lVisageGaze -lVisageVision
+}
 
 unix:macx {
     CONFIG        += c++11

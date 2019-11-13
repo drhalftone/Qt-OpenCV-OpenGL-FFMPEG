@@ -1,15 +1,35 @@
 #include "laufacialfeaturedetectorglwidget.h"
 #include "locale.h"
 
+#ifdef USEVISAGE
+using namespace VisageSDK;
+#else
 using namespace std;
 using namespace cv;
 using namespace cv::face;
+#endif
 
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
-LAUFacialFeatureDetectorGLWidget::LAUFacialFeatureDetectorGLWidget(QWidget *parent) : LAUVideoGLWidget(parent), frameBufferObject(nullptr), faceDetector(nullptr), subDivide(nullptr)
+LAUFacialFeatureDetectorGLWidget::LAUFacialFeatureDetectorGLWidget(QWidget *parent) : LAUVideoGLWidget(parent), frameBufferObject(nullptr)
 {
+#ifdef USEVISAGE
+    inputImage = nullptr;
+
+    QSettings settings;
+    QString directory = settings.value("LAUFacialFeatureDetectorGLWidget::licenseKey", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
+    QString string = QFileDialog::getOpenFileName(nullptr, QString("Load license key..."), directory, QString("*.vlc"));
+    if (string.isEmpty() == false) {
+        settings.setValue("LAUFacialFeatureDetectorGLWidget::licenseKey", QFileInfo(string).absolutePath());
+
+        visageFeaturesDetector = new VisageFeaturesDetector();
+        visageFeaturesDetector->Initialize("/Users/dllau/SourceTree/visageSDK-macOS/475-843-207-050-898-514-922-281-440-122-982.vlc"); //string.toLatin1());
+    }
+#else
+    faceDetector = nullptr;
+    subDivide = nullptr;
+
     QSettings settings;
     QString directory = settings.value("LAUFacialFeatureDetectorGLWidget::faceDetectorModel", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
     QString string = QFileDialog::getOpenFileName(nullptr, QString("Load classifier..."), directory, QString("*.xml"));
@@ -31,6 +51,7 @@ LAUFacialFeatureDetectorGLWidget::LAUFacialFeatureDetectorGLWidget(QWidget *pare
             }
         }
     }
+#endif
 }
 
 /****************************************************************************/
@@ -43,6 +64,11 @@ LAUFacialFeatureDetectorGLWidget::~LAUFacialFeatureDetectorGLWidget()
         if (frameBufferObject) {
             delete frameBufferObject;
         }
+#ifdef USEVISAGE
+        if (inputImage) {
+            vsReleaseImageHeader(&inputImage);
+        }
+#else
         if (faceDetector) {
             faceDetector.release();
             delete faceDetector;
@@ -55,6 +81,7 @@ LAUFacialFeatureDetectorGLWidget::~LAUFacialFeatureDetectorGLWidget()
             subDivide.release();
             delete subDivide;
         }
+#endif
     }
     qDebug() << "LAUFacialFeatureDetectorGLWidget::~LAUFacialFeatureDetectorGLWidget()";
 }
@@ -76,9 +103,14 @@ void LAUFacialFeatureDetectorGLWidget::process()
             frameBufferObject = new QOpenGLFramebufferObject(videoTexture->width(), videoTexture->height(), frameBufferObjectFormat);
             frameBufferObject->release();
 
+#ifdef USEVISAGE
+            // CREATE A VISAGE IMAGE FOR HOLDING THE GRAYSCALE FRAME ON THE CPU
+            inputImage = vsCreateImageHeader(vsSize(videoTexture->width(), videoTexture->height()), 8, 1);
+#else
             // CREATE A OPENCV MATRIX FOR HOLDING THE GRAYSCALE FRAME ON THE CPU
             videoFrame = Mat(videoTexture->height(), videoTexture->width(), CV_8UC3);
             grayFrame = Mat(videoTexture->height(), videoTexture->width(), CV_8U);
+#endif
         } else if (frameBufferObject->width() != videoTexture->width() || frameBufferObject->height() != videoTexture->height()) {
             // DELETE THE OLD FRAMEBUFFEROBJECT BECAUSE IT IS NO LONGER THE CORRECT SIZE
             delete frameBufferObject;
@@ -91,9 +123,17 @@ void LAUFacialFeatureDetectorGLWidget::process()
             frameBufferObject = new QOpenGLFramebufferObject(videoTexture->width(), videoTexture->height(), frameBufferObjectFormat);
             frameBufferObject->release();
 
+#ifdef USEVISAGE
+            // CREATE A VISAGE IMAGE FOR HOLDING THE GRAYSCALE FRAME ON THE CPU
+            if (inputImage) {
+                vsReleaseImageHeader(&inputImage);
+            }
+            inputImage = vsCreateImageHeader(vsSize(videoTexture->width(), videoTexture->height()), 8, 1);
+#else
             // CREATE A OPENCV MATRIX FOR HOLDING THE GRAYSCALE FRAME ON THE CPU
             videoFrame = Mat(videoTexture->height(), videoTexture->width(), CV_8UC3);
             grayFrame = Mat(videoTexture->height(), videoTexture->width(), CV_8U);
+#endif
         }
 
         // SET CLEAR COLOR AS NOT A NUMBERS
@@ -128,6 +168,11 @@ void LAUFacialFeatureDetectorGLWidget::process()
             }
             frameBufferObject->release();
 
+#ifdef USEVISAGE
+            // COPY FRAME BUFFER TEXTURE FROM GPU TO LOCAL CPU BUFFER
+            glBindTexture(GL_TEXTURE_2D, frameBufferObject->texture());
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, inputImage->imageData);
+#else
             // COPY FRAME BUFFER TEXTURE FROM GPU TO LOCAL CPU BUFFER
             glBindTexture(GL_TEXTURE_2D, frameBufferObject->texture());
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, grayFrame.data);
@@ -245,6 +290,7 @@ void LAUFacialFeatureDetectorGLWidget::process()
                     frameBufferObject->release();
                 }
             }
+#endif
         }
     }
 }
