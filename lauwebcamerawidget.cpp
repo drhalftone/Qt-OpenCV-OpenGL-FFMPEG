@@ -15,18 +15,24 @@ LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *pa
     items << QString("Randomized Pixels");
     items << QString("Raw Video");
     items << QString("Sobel Edges");
-    QString string = QInputDialog::getItem(nullptr, QString("Web Camera Widget"), QString("Select video filter"), items);
 
-    if (string == QString("Facial Features")) {
-        label = new LAUFacialFeatureDetectorGLWidget();
-    } else if (string == QString("Harris Corners")) {
-        label = new LAUHarrisCornerDetectorGLWidget();
-    } else if (string == QString("Randomized Pixels")) {
-        label = new LAURandomizePixelsGLWidget();
-    } else if (string == QString("Raw Video")) {
+    bool ok = false;
+    QString string = QInputDialog::getItem(nullptr, QString("Web Camera Widget"), QString("Select video filter"), items, 0, false, &ok);
+
+    if (ok) {
+        if (string == QString("Raw Video")) {
+            label = new LAUVideoGLWidget();
+        } else if (string == QString("Facial Features")) {
+            label = new LAUFacialFeatureDetectorGLWidget();
+        } else if (string == QString("Harris Corners")) {
+            label = new LAUHarrisCornerDetectorGLWidget();
+        } else if (string == QString("Randomized Pixels")) {
+            label = new LAURandomizePixelsGLWidget();
+        } else if (string == QString("Sobel Edges")) {
+            label = new LAUSobelEdgeDetectorGLWidget();
+        }
+    } else {
         label = new LAUVideoGLWidget();
-    } else if (string == QString("Sobel Edges")) {
-        label = new LAUSobelEdgeDetectorGLWidget();
     }
     label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->layout()->addWidget(label);
@@ -54,8 +60,8 @@ LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *pa
 
         QCameraViewfinderSettings set = camera->viewfinderSettings();
         set.setResolution(LAUWEBCAMERAWIDGETWIDTH, LAUWEBCAMERAWIDGETHEIGHT);
-        set.setMaximumFrameRate(30.0);
-        set.setMinimumFrameRate(30.0);
+        set.setMaximumFrameRate(LAUWEBCAMERAWIDGETFPS);
+        set.setMinimumFrameRate(LAUWEBCAMERAWIDGETFPS);
         set.setPixelFormat(QVideoFrame::Format_ARGB32);
 
         camera->setViewfinderSettings(set);

@@ -55,6 +55,7 @@ protected:
 private:
     QMenu *contextMenu;
 
+    bool templateAvailableFlag;
     QOpenGLBuffer faceVertexBuffer, faceIndexBuffer;
     QOpenGLFramebufferObject *frameBufferObject;
     QOpenGLShaderProgram programA, programB;

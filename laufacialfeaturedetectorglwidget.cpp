@@ -12,12 +12,13 @@ using namespace cv::face;
 
 #define NUMBEROFFACIALFEATURES    68
 #define NUMBEROFFACIALTRIANGLES  107
+
 unsigned int triangles[3 * NUMBEROFFACIALTRIANGLES] = { 67, 58, 59, 31, 32, 49, 58, 57, 7, 52, 34, 35, 45, 44, 25, 40, 39, 29, 18, 37, 36, 42, 22, 43, 59, 48, 60, 1, 36, 41, 61, 50, 51, 52, 53, 63, 65, 56, 66, 67, 61, 62, 55, 10, 56, 57, 9, 8, 27, 28, 39, 33, 52, 51, 53, 55, 65, 65, 66, 62, 42, 28, 27, 35, 46, 14, 20, 37, 19, 19, 37, 18, 0, 36, 1, 17, 18, 36, 20, 38, 37, 20, 21, 38, 38, 21, 39, 43, 23, 44, 34, 30, 35, 39, 21, 27, 29, 28, 42, 29, 39, 28, 33, 30, 34, 29, 31, 40, 30, 29, 35, 30, 32, 31, 17, 36, 0, 49, 48, 31, 30, 31, 29, 41, 2, 1, 48, 3, 2, 31, 48, 2, 59, 58, 6, 48, 4, 3, 48, 5, 4, 48, 59, 5, 5, 59, 6, 67, 66, 58, 58, 7, 6, 60, 49, 59, 33, 32, 30, 59, 49, 67, 60, 48, 49, 41, 31, 2, 41, 40, 31, 49, 61, 67, 49, 32, 50, 33, 50, 32, 61, 49, 50, 63, 62, 51, 62, 61, 51, 52, 63, 51, 66, 67, 62, 35, 53, 52, 65, 62, 63, 66, 57, 58, 56, 9, 57, 57, 8, 7, 66, 56, 57, 65, 63, 53, 65, 55, 56, 53, 64, 55, 56, 10, 9, 55, 11, 10, 54, 64, 53, 64, 54, 55, 35, 54, 53, 54, 11, 55, 14, 54, 35, 13, 12, 54, 54, 12, 11, 47, 29, 42, 54, 14, 13, 46, 15, 14, 52, 33, 34, 51, 50, 33, 22, 42, 27, 47, 35, 29, 22, 23, 43, 46, 35, 47, 21, 22, 27, 24, 44, 23, 25, 44, 24, 16, 45, 26, 15, 46, 45, 45, 25, 26, 45, 16, 15 };
 
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
-LAUFacialFeatureDetectorGLWidget::LAUFacialFeatureDetectorGLWidget(QWidget *parent) : LAUVideoGLWidget(parent), contextMenu(nullptr), frameBufferObject(nullptr), faceDetector(nullptr), subDivide(nullptr)
+LAUFacialFeatureDetectorGLWidget::LAUFacialFeatureDetectorGLWidget(QWidget *parent) : LAUVideoGLWidget(parent), contextMenu(nullptr), frameBufferObject(nullptr), faceDetector(nullptr), subDivide(nullptr), templateAvailableFlag(false)
 {
     QSettings settings;
     QString directory = settings.value("LAUFacialFeatureDetectorGLWidget::faceDetectorModel", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
@@ -150,12 +151,27 @@ void LAUFacialFeatureDetectorGLWidget::process()
             glBindTexture(GL_TEXTURE_2D, frameBufferObject->texture());
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, grayFrame.data);
 
-            //videoTexture->bind();
-            //glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, videoFrame.data);
+            if (templateAvailableFlag == false) {
+                videoTexture->bind();
+                glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, videoFrame.data);
+            }
 
             // CREATE A VECTOR OF RECTANGLES TO HOLD ONE RECTANGLE PER FACE
             vector<Rect> faces;
             faceDetector->detectMultiScale(grayFrame, faces);
+
+            // REMOVE ALL BUT THE LARGEST FACE
+            if (faces.size() > 1) {
+                int largestFaceIndex = 0;
+                for (int n = 1; n < faces.size(); n++) {
+                    if (faces.at(largestFaceIndex).area() < faces.at(n).area()) {
+                        largestFaceIndex = n;
+                    }
+                }
+                Rect face = faces.at(largestFaceIndex);
+                faces.clear();
+                faces.push_back(face);
+            }
 
             // LETS KEEP TRACK OF HOW MANY FACE TRIANGLES WE NEED TO DRAW LATER
             int numLandmarks = 0;
@@ -166,10 +182,15 @@ void LAUFacialFeatureDetectorGLWidget::process()
                 vector< vector<Point2f> > landmarks;
                 bool success = facemark->fit(grayFrame, faces, landmarks);
                 if (success) {
-                    videoTexture->setData(QOpenGLTexture::RGB, QOpenGLTexture::UInt8, (const void *)videoFrame.data);
-
                     // GET A COPY OF THE JUST DETECTED FACIAL FEATURE COORDINATES
                     vector<Point2f> features = landmarks.at(0);
+
+                    // SINCE WE DON'T HAVE A TEMPLATE, USE THE INCOMING FACE
+                    if (templateAvailableFlag == false) {
+                        templateList = features;
+                    } else {
+                        videoTexture->setData(QOpenGLTexture::RGB, QOpenGLTexture::UInt8, (const void *)videoFrame.data);
+                    }
 
                     // GET THE NUMBER OF LANDMARKS BETWEEN THIS AND TEMPLATE
                     numLandmarks = qMin(features.size(), templateList.size());
@@ -351,12 +372,25 @@ void LAUFacialFeatureDetectorGLWidget::onLoadFaceImageFromDisk()
         vector<Rect> faces;
         faceDetector->detectMultiScale(grayFrame, faces);
 
+        // REMOVE ALL BUT THE LARGEST FACE
+        if (faces.size() > 1) {
+            int largestFaceIndex = 0;
+            for (int n = 1; n < faces.size(); n++) {
+                if (faces.at(largestFaceIndex).area() < faces.at(n).area()) {
+                    largestFaceIndex = n;
+                }
+            }
+            Rect face = faces.at(largestFaceIndex);
+            faces.clear();
+            faces.push_back(face);
+        }
+
         // NEW SEE IF FOUND EXACTLY ONE FACE
         if (faces.size() == 1) {
             // CREATE A VECTOR TO HOLD THE LANDMARKS FOR EACH DETECTED FACE
             vector< vector<Point2f> > landmarks;
-            bool success = facemark->fit(grayFrame, faces, landmarks);
-            if (success) {
+            templateAvailableFlag = facemark->fit(grayFrame, faces, landmarks);
+            if (templateAvailableFlag) {
                 templateList = landmarks.at(0);
             }
         }

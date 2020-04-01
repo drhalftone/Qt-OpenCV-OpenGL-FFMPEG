@@ -28,6 +28,7 @@
 
 #define LAUWEBCAMERAWIDGETWIDTH  320
 #define LAUWEBCAMERAWIDGETHEIGHT 240
+#define LAUWEBCAMERAWIDGETFPS     30.0f
 
 /****************************************************************************/
 /****************************************************************************/
