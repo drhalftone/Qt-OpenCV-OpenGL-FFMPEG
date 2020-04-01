@@ -1,18 +1,19 @@
 #ifndef LAUFACIALFEATUREDETECTORGLWIDGET_H
 #define LAUFACIALFEATUREDETECTORGLWIDGET_H
 
-#include <QMenu>
 #include <QtCore>
-#include <QAction>
 #include <QObject>
 #include <QSettings>
 #include <QFileDialog>
-#include <QMouseEvent>
 
+#ifdef USEVISAGE
+#include "visageVision.h"
+#include "VisageTracker.h"
+#else
 #include "opencv2/face.hpp"
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
+#endif
 
 #include "lauvideoglwidget.h"
 
@@ -21,7 +22,6 @@
 /****************************************************************************/
 class LAUFacialFeatureDetectorGLWidget : public LAUVideoGLWidget
 {
-    Q_OBJECT
 
 public:
     explicit LAUFacialFeatureDetectorGLWidget(QWidget *parent = nullptr);
@@ -39,32 +39,20 @@ public:
     void process();
     void paint();
 
-public slots:
-    void onLoadFaceImageFromDisk();
-
-protected:
-    void mousePressEvent(QMouseEvent *event)
-    {
-        if (event->button() == Qt::RightButton) {
-            if (contextMenu) {
-                contextMenu->popup(event->globalPos());
-            }
-        }
-    }
-
 private:
-    QMenu *contextMenu;
-
-    bool templateAvailableFlag;
     QOpenGLBuffer faceVertexBuffer, faceIndexBuffer;
     QOpenGLFramebufferObject *frameBufferObject;
     QOpenGLShaderProgram programA, programB;
 
+#ifdef USEVISAGE
+    VsImage *inputImage;
+    VisageSDK::VisageFeaturesDetector *visageFeaturesDetector;
+#else
     cv::Mat videoFrame, grayFrame;
     cv::Ptr<cv::Subdiv2D> subDivide;
     cv::Ptr<cv::CascadeClassifier> faceDetector;
     cv::Ptr<cv::face::Facemark> facemark;
-    std::vector<cv::Point2f> templateList;
+#endif
 };
 
 #endif // LAUFACIALFEATUREDETECTORGLWIDGET_H
