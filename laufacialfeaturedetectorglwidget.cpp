@@ -1,18 +1,18 @@
 #include "laufacialfeaturedetectorglwidget.h"
 #include "locale.h"
 
-#ifdef USEVISAGE
-using namespace VisageSDK;
-#else
 using namespace std;
 using namespace cv;
+
+#ifdef USEVISAGE
+using namespace VisageSDK;
 using namespace cv::face;
 #endif
 
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
-LAUFacialFeatureDetectorGLWidget::LAUFacialFeatureDetectorGLWidget(QWidget *parent) : LAUVideoGLWidget(parent), frameBufferObject(nullptr)
+LAUFacialFeatureDetectorGLWidget::LAUFacialFeatureDetectorGLWidget(QWidget *parent) : LAUVideoGLWidget(parent), frameBufferObject(nullptr), visageTracker(nullptr)
 {
 #ifdef USEVISAGE
     inputImage = nullptr;
@@ -23,8 +23,18 @@ LAUFacialFeatureDetectorGLWidget::LAUFacialFeatureDetectorGLWidget(QWidget *pare
     if (string.isEmpty() == false) {
         settings.setValue("LAUFacialFeatureDetectorGLWidget::licenseKey", QFileInfo(string).absolutePath());
 
-        visageFeaturesDetector = new VisageFeaturesDetector();
-        visageFeaturesDetector->Initialize("./475-843-207-050-898-514-922-281-440-122-982.vlc");
+        string = QFileInfo(string).path();
+        initializeLicenseManager(string.toLatin1());
+
+        string.append("/data/Facial Features Tracker - Low.cfg");
+        visageTracker = new VisageTracker(string.toUtf8());
+
+        VisageConfiguration configuration = visageTracker->getTrackerConfiguration();
+        //configuration.setMaxFaceScale(1.0f);
+        //configuration.setMinFaceScale(0.1f);
+        //configuration.setFaceDetectorSensitivity(0.1f);
+        //configuration.enableVNN();
+        visageTracker->setTrackerConfiguration(configuration);
     }
 #else
     faceDetector = nullptr;
@@ -68,6 +78,9 @@ LAUFacialFeatureDetectorGLWidget::~LAUFacialFeatureDetectorGLWidget()
         if (inputImage) {
             vsReleaseImageHeader(&inputImage);
         }
+        if (visageTracker){
+            delete visageTracker;
+        }
 #else
         if (faceDetector) {
             faceDetector.release();
@@ -93,6 +106,8 @@ void LAUFacialFeatureDetectorGLWidget::process()
 {
     // SEE IF WE NEED NEW FBOS
     if (videoTexture) {
+        static int frameCounter = 0;
+
         // INITIALIZE THE FRAME BUFFER OBJECT BASED ON THE INCOMING TEXTURE SIZE
         if (frameBufferObject == nullptr) {
             // CREATE A FORMAT OBJECT FOR CREATING THE FRAME BUFFER
@@ -106,11 +121,10 @@ void LAUFacialFeatureDetectorGLWidget::process()
 #ifdef USEVISAGE
             // CREATE A VISAGE IMAGE FOR HOLDING THE GRAYSCALE FRAME ON THE CPU
             inputImage = vsCreateImageHeader(vsSize(videoTexture->width(), videoTexture->height()), 8, 1);
-#else
+#endif
             // CREATE A OPENCV MATRIX FOR HOLDING THE GRAYSCALE FRAME ON THE CPU
             videoFrame = Mat(videoTexture->height(), videoTexture->width(), CV_8UC3);
             grayFrame = Mat(videoTexture->height(), videoTexture->width(), CV_8U);
-#endif
         } else if (frameBufferObject->width() != videoTexture->width() || frameBufferObject->height() != videoTexture->height()) {
             // DELETE THE OLD FRAMEBUFFEROBJECT BECAUSE IT IS NO LONGER THE CORRECT SIZE
             delete frameBufferObject;
@@ -129,11 +143,10 @@ void LAUFacialFeatureDetectorGLWidget::process()
                 vsReleaseImageHeader(&inputImage);
             }
             inputImage = vsCreateImageHeader(vsSize(videoTexture->width(), videoTexture->height()), 8, 1);
-#else
+#endif
             // CREATE A OPENCV MATRIX FOR HOLDING THE GRAYSCALE FRAME ON THE CPU
             videoFrame = Mat(videoTexture->height(), videoTexture->width(), CV_8UC3);
             grayFrame = Mat(videoTexture->height(), videoTexture->width(), CV_8U);
-#endif
         }
 
         // SET CLEAR COLOR AS NOT A NUMBERS
@@ -153,6 +166,7 @@ void LAUFacialFeatureDetectorGLWidget::process()
                         glActiveTexture(GL_TEXTURE0);
                         videoTexture->bind();
                         programA.setUniformValue("qt_texture", 0);
+                        programA.setUniformValue("qt_flip", true);
 
                         // TELL OPENGL PROGRAMMABLE PIPELINE HOW TO LOCATE VERTEX POSITION DATA
                         glVertexAttribPointer(programA.attributeLocation("qt_vertex"), 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
@@ -171,7 +185,28 @@ void LAUFacialFeatureDetectorGLWidget::process()
 #ifdef USEVISAGE
             // COPY FRAME BUFFER TEXTURE FROM GPU TO LOCAL CPU BUFFER
             glBindTexture(GL_TEXTURE_2D, frameBufferObject->texture());
-            glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, inputImage->imageData);
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, grayFrame.data);
+
+            videoTexture->bind();
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, videoFrame.data);
+
+            if (visageTracker){
+                int *numFaces = visageTracker->track(grayFrame.cols, grayFrame.rows, (const char*)grayFrame.data, faceData, VISAGE_FRAMEGRABBER_FMT_LUMINANCE, VISAGE_FRAMEGRABBER_ORIGIN_TL, 0, -1, 1);
+                if (frameCounter > 2 && numFaces[0] == TRACK_STAT_OK){
+                    for (int group = 0; group < 14; group++){
+                        // DRAW THE EYE FIDUCIALS ON THE VIDEO FRAME
+                        int numFiducials = faceData[0].featurePoints2D->groupSize(group+1);
+                        for (int n = 0; n < numFiducials; n++){
+                            FeaturePoint fp = faceData[0].featurePoints2D->getFP(group+1,n+1);
+                            int col = fp.pos[0] * videoFrame.cols;
+                            int row = fp.pos[1] * videoFrame.rows;
+
+                            circle(videoFrame, Point(col, row), 2, Scalar(0, 255, 0), -1);
+                        }
+                    }
+                    videoTexture->setData(QOpenGLTexture::RGB, QOpenGLTexture::UInt8, (const void *)videoFrame.data);
+                }
+            }
 #else
             // COPY FRAME BUFFER TEXTURE FROM GPU TO LOCAL CPU BUFFER
             glBindTexture(GL_TEXTURE_2D, frameBufferObject->texture());
@@ -292,6 +327,7 @@ void LAUFacialFeatureDetectorGLWidget::process()
             }
 #endif
         }
+        frameCounter++;
     }
 }
 
@@ -364,7 +400,8 @@ void LAUFacialFeatureDetectorGLWidget::paint()
                     if (quadIndexBuffer.bind()) {
                         // SET THE ACTIVE TEXTURE ON THE GPU
                         glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, frameBufferObject->texture());
+                        //glBindTexture(GL_TEXTURE_2D, frameBufferObject->texture());
+                        videoTexture->bind();
                         program.setUniformValue("qt_texture", 0);
 
                         // TELL OPENGL PROGRAMMABLE PIPELINE HOW TO LOCATE VERTEX POSITION DATA
