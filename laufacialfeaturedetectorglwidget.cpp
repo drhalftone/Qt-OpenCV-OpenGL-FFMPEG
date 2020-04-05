@@ -9,6 +9,10 @@ using namespace VisageSDK;
 using namespace cv::face;
 #endif
 
+int groupList[68] = {15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,4,14,4,14,4,4,14,4,14,4,14,14,14,14,9,9,9,9,9,3,12,12,3,12,12,3,12,12,3,12,12,8,8,8,8,8,8,8,8,8,8,8,8,2,2,2,2,2,2,2,2};
+int indexListA[68] = {2,4,6,8,10,12,14,16,17,15,13,11,9,7,5,3,1,6,4,4,2,2,1,1,3,3,5,25,24,23,22,2,4,15,5,1,12,10,6,8,8,12,11,9,5,7,7,11,4,6,9,1,10,5,3,3,2,2,2,4,5,7,2,6,4,8,3,9};
+int indexListB[68] = {2,4,6,8,10,12,14,16,17,15,13,11,9,7,5,3,1,6,4,4,2,2,1,1,3,3,5,25,24,23,22,2,4,15,5,1,12,10,6,8,8,12,11,9,5,7,7,11,4,6,9,1,10,5,3,7,7,2,8,8,5,7,2,6,4,8,3,9};
+
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
@@ -193,17 +197,33 @@ void LAUFacialFeatureDetectorGLWidget::process()
             if (visageTracker){
                 int *numFaces = visageTracker->track(grayFrame.cols, grayFrame.rows, (const char*)grayFrame.data, faceData, VISAGE_FRAMEGRABBER_FMT_LUMINANCE, VISAGE_FRAMEGRABBER_ORIGIN_TL, 0, -1, 1);
                 if (frameCounter > 2 && numFaces[0] == TRACK_STAT_OK){
-                    for (int group = 0; group < 14; group++){
-                        // DRAW THE EYE FIDUCIALS ON THE VIDEO FRAME
-                        int numFiducials = faceData[0].featurePoints2D->groupSize(group+1);
-                        for (int n = 0; n < numFiducials; n++){
-                            FeaturePoint fp = faceData[0].featurePoints2D->getFP(group+1,n+1);
-                            int col = fp.pos[0] * videoFrame.cols;
-                            int row = fp.pos[1] * videoFrame.rows;
+                    // CREATE A VECTOR TO HOLD THE LANDMARKS FOR EACH DETECTED FACE
+                    vector<Point2f> landmarks(68);
 
-                            circle(videoFrame, Point(col, row), 2, Scalar(0, 255, 0), -1);
-                        }
+                    for (int n=0; n<68; n++){
+                        FeaturePoint fpA = faceData[0].featurePoints2D->getFP(groupList[n],indexListA[n]);
+                        FeaturePoint fpB = faceData[0].featurePoints2D->getFP(groupList[n],indexListB[n]);
+                        float col = (fpA.pos[0] + fpB.pos[0]) / 2.0f * (float)videoFrame.cols;
+                        float row = (fpA.pos[1] + fpB.pos[1]) / 2.0f * (float)videoFrame.rows;
+                        landmarks.at(n) = Point2f(col, row);
                     }
+
+                    for (int n = 0; n < landmarks.size(); n++){
+                        int col = landmarks[n].x;
+                        int row = landmarks[n].y;
+                        circle(videoFrame, Point(col, row), 2, Scalar(0, 255, 0), -1);
+                    }
+
+                    //for (int group = 0; group < 14; group++){
+                    //    // DRAW THE EYE FIDUCIALS ON THE VIDEO FRAME
+                    //    int numFiducials = faceData[0].featurePoints2D->groupSize(group+1);
+                    //    for (int n = 0; n < numFiducials; n++){
+                    //        FeaturePoint fp = faceData[0].featurePoints2D->getFP(group+1,n+1);
+                    //        int col = fp.pos[0] * videoFrame.cols;
+                    //        int row = fp.pos[1] * videoFrame.rows;
+                    //        circle(videoFrame, Point(col, row), 2, Scalar(0, 255, 0), -1);
+                    //    }
+                    //}
                     videoTexture->setData(QOpenGLTexture::RGB, QOpenGLTexture::UInt8, (const void *)videoFrame.data);
                 }
             }
