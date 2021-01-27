@@ -3,7 +3,7 @@
 #include <QFileDialog>
 #include <QSettings>
 
-QUrl LAUWebCameraWidget::localURL = QUrl::fromLocalFile(QString("%1/videofile.mpg").arg(QStandardPaths::writableLocation(QStandardPaths::TempLocation)));
+QUrl LAUWebCameraWidget::localURL = QUrl::fromLocalFile(QString("%1/videofile.mp4").arg(QStandardPaths::writableLocation(QStandardPaths::TempLocation)));
 
 /****************************************************************************/
 /****************************************************************************/
@@ -230,11 +230,11 @@ bool LAUWebCameraWidget::saveVideoFile()
     QString filename;
     for (int counter = 0; counter < 1000; counter++) {
         if (counter < 10) {
-            filename = QString("%1/intubation00%2.mpg").arg(directory).arg(counter);
+            filename = QString("%1/intubation00%2.mp4").arg(directory).arg(counter);
         } else if (counter < 100) {
-            filename = QString("%1/intubation0%2.mpg").arg(directory).arg(counter);
+            filename = QString("%1/intubation0%2.mp4").arg(directory).arg(counter);
         } else {
-            filename = QString("%1/intubation%2.mpg").arg(directory).arg(counter);
+            filename = QString("%1/intubation%2.mp4").arg(directory).arg(counter);
         }
 
         if (QFile::exists(filename) == false) {
@@ -244,10 +244,10 @@ bool LAUWebCameraWidget::saveVideoFile()
 
     while (1) {
         // COPY TO A USER SPECIFIED FILE
-        filename = QFileDialog::getSaveFileName(nullptr, QString("Save video to disk (*.mpg)"), filename, QString("*.mpg"));
+        filename = QFileDialog::getSaveFileName(nullptr, QString("Save video to disk (*.mp4)"), filename, QString("*.mp4"));
         if (filename.isEmpty() == false) {
-            if (filename.toLower().endsWith(".mpg") == false) {
-                filename.append(".mpg");
+            if (filename.toLower().endsWith(".mp4") == false) {
+                filename.append(".mp4");
             }
             settings.setValue("LAUWebCameraWidget::lastUsedDirectory", QFileInfo(filename).absolutePath());
 
