@@ -1,4 +1,5 @@
 #include "lauwebcamerawidget.h"
+#include <QMessageBox>
 #include <QFileDialog>
 #include <QSettings>
 
@@ -212,11 +213,11 @@ void LAUWebCameraWidget::grabImage()
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
-void LAUWebCameraWidget::saveVideoFile()
+bool LAUWebCameraWidget::saveVideoFile()
 {
     // MAKE SURE TEMPORARY VIDEO FILE EXISTS
     if (QFile::exists(localURL.toLocalFile()) == false) {
-        return;
+        return (false);
     }
 
     // GET THE LAST USED DIRECTORY FROM SETTINGS
@@ -241,15 +242,24 @@ void LAUWebCameraWidget::saveVideoFile()
         }
     }
 
-    // COPY TO A USER SPECIFIED FILE
-    filename = QFileDialog::getSaveFileName(nullptr, QString("Save video to disk (*.mpg)"), filename, QString("*.mpg"));
-    if (filename.isEmpty() == false) {
-        if (filename.toLower().endsWith(".mpg") == false) {
-            filename.append(".mpg");
-        }
-        settings.setValue("LAUWebCameraWidget::lastUsedDirectory", QFileInfo(filename).absolutePath());
+    while (1) {
+        // COPY TO A USER SPECIFIED FILE
+        filename = QFileDialog::getSaveFileName(nullptr, QString("Save video to disk (*.mpg)"), filename, QString("*.mpg"));
+        if (filename.isEmpty() == false) {
+            if (filename.toLower().endsWith(".mpg") == false) {
+                filename.append(".mpg");
+            }
+            settings.setValue("LAUWebCameraWidget::lastUsedDirectory", QFileInfo(filename).absolutePath());
 
-        // RENAME THE TEMPORARY RECORDING TO A PERMANENT FILE
-        QFile::rename(localURL.toLocalFile(), filename);
+            // RENAME THE TEMPORARY RECORDING TO A PERMANENT FILE
+            return (QFile::rename(localURL.toLocalFile(), filename));
+        }
+
+        // GIVE THE USER ANOTHER CHANCE
+        if (QMessageBox::warning(this, QString("Webcam Recorder"), QString("You are about to discard the recording and lose the data forever.\n\nDo you want to do this?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes) {
+            if (QMessageBox::warning(this, QString("Webcam Recorder"), QString("Are you sure?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes) {
+                return (false);
+            }
+        }
     }
 }

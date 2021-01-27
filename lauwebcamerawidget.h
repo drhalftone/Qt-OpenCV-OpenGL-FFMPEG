@@ -53,7 +53,7 @@ public:
     }
 
     void grabImage();
-    void saveVideoFile();
+    bool saveVideoFile();
 
 public slots:
     void onCapture();
