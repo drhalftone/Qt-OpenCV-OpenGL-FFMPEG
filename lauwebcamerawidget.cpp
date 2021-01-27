@@ -1,9 +1,13 @@
 #include "lauwebcamerawidget.h"
+#include <QFileDialog>
+#include <QSettings>
+
+QUrl LAUWebCameraWidget::localURL = QUrl::fromLocalFile(QString("%1/videofile.mpg").arg(QStandardPaths::writableLocation(QStandardPaths::TempLocation)));
 
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
-LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *parent) : QWidget(parent), mode(capture), thread(NULL), camera(NULL), imageCapture(NULL), surface(NULL)
+LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *parent) : QWidget(parent), mode(capture), thread(NULL), camera(NULL), recorder(NULL), imageCapture(NULL), surface(NULL)
 {
     this->setLayout(new QVBoxLayout());
     this->layout()->setContentsMargins(6, 6, 6, 6);
@@ -17,7 +21,7 @@ LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *pa
     items << QString("Sobel Edges");
 
     bool ok = false;
-    QString string = QInputDialog::getItem(nullptr, QString("Web Camera Widget"), QString("Select video filter"), items, 0, false, &ok);
+    QString string = QInputDialog::getItem(nullptr, QString("Web Camera Widget"), QString("Select video filter"), items, 3, false, &ok);
 
     if (ok) {
         if (string == QString("Raw Video")) {
@@ -120,6 +124,70 @@ void LAUWebCameraWidget::onCapture()
         if (imageCapture->error() != QCameraImageCapture::NoError) {
             qDebug() << imageCapture->errorString();
         }
+    }
+}
+
+/****************************************************************************/
+/****************************************************************************/
+/****************************************************************************/
+void LAUWebCameraWidget::onTriggerVideo(bool state)
+{
+    qDebug() << "Trigger video recording:" << state;
+
+    if (recorder) {
+        // STOP RECORDING AND DELETE THE RECORDER
+        recorder->stop();
+
+        // GET THE LAST USED DIRECTORY FROM SETTINGS
+        QSettings settings;
+        QString directory = settings.value("LAUWebCameraWidget::lastUsedDirectory", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
+        if (QDir().exists(directory) == false) {
+            directory = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+        }
+
+        QString filename;
+        for (int counter = 0; counter < 1000; counter++) {
+            if (counter < 10) {
+                filename = QString("%1/intubation00%2.mpg").arg(directory).arg(counter);
+            } else if (counter < 100) {
+                filename = QString("%1/intubation0%2.mpg").arg(directory).arg(counter);
+            } else {
+                filename = QString("%1/intubation%2.mpg").arg(directory).arg(counter);
+            }
+
+            if (QFile::exists(filename) == false) {
+                break;
+            }
+        }
+
+        // COPY TO A USER SPECIFIED FILE
+        filename = QFileDialog::getSaveFileName(nullptr, QString("Save video to disk (*.mpg)"), filename, QString("*.mpg"));
+        if (filename.isEmpty() == false) {
+            if (filename.toLower().endsWith(".mpg") == false) {
+                filename.append(".mpg");
+            }
+            settings.setValue("LAUWebCameraWidget::lastUsedDirectory", QFileInfo(filename).absolutePath());
+
+            // RENAME THE TEMPORARY RECORDING TO A PERMANENT FILE
+            QFile::rename(localURL.toLocalFile(), filename);
+        }
+
+        // DELETE THE RECORDER
+        recorder->deleteLater();
+        recorder = nullptr;
+    } else {
+        // CREATE NEW RECORDER
+        recorder = new QMediaRecorder(camera);
+
+        // SET AUDIO PARAMETERS
+        QAudioEncoderSettings audioSettings;
+        audioSettings.setCodec("audio/amr");
+        audioSettings.setQuality(QMultimedia::HighQuality);
+        recorder->setAudioSettings(audioSettings);
+
+        // SET THE SINK
+        recorder->setOutputLocation(localURL);
+        recorder->record();
     }
 }
 

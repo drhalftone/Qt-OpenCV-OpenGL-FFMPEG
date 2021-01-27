@@ -17,6 +17,7 @@
 #include <QCameraInfo>
 #include <QInputDialog>
 #include <QApplication>
+#include <QMediaRecorder>
 #include <QDialogButtonBox>
 #include <QCameraImageCapture>
 
@@ -56,6 +57,7 @@ public:
 public slots:
     void onCapture();
     void onImageAvailable(int id, QImage image);
+    void onTriggerVideo(bool state);
 
 protected:
     void showEvent(QShowEvent *)
@@ -71,8 +73,11 @@ private:
     LAUVideoGLWidget *label;
     QThread *thread;
     QCamera *camera;
+    QMediaRecorder *recorder;
     QCameraImageCapture *imageCapture;
     LAUVideoSurface *surface;
+
+    static QUrl localURL;
 };
 
 /****************************************************************************/
@@ -83,7 +88,7 @@ class LAUWebCameraDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit LAUWebCameraDialog(QCamera::CaptureMode capture, QWidget *parent = 0) : QDialog(parent)
+    explicit LAUWebCameraDialog(QCamera::CaptureMode capture, QWidget *parent = 0) : QDialog(parent), buttonBox(nullptr)
     {
         // CREATE A WIDGET TO WRAP AROUND
         widget = new LAUWebCameraWidget(capture);
@@ -94,9 +99,18 @@ public:
         this->layout()->setContentsMargins(0, 0, 0, 0);
         this->layout()->addWidget(widget);
 
-        QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+        buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
         connect(buttonBox->button(QDialogButtonBox::Ok), SIGNAL(clicked()), this, SLOT(accept()));
         connect(buttonBox->button(QDialogButtonBox::Cancel), SIGNAL(clicked()), this, SLOT(reject()));
+
+        buttonBox->button(QDialogButtonBox::Ok)->setText(QString("Snapshot"));
+        buttonBox->button(QDialogButtonBox::Cancel)->setText(QString("Quit"));
+
+        QPushButton *button = buttonBox->addButton(QString("Record"), QDialogButtonBox::ActionRole);
+        button->setCheckable(true);
+        button->setChecked(false);
+        connect(button, SIGNAL(clicked(bool)), this, SLOT(onTriggerVideo(bool)));
+
         this->layout()->addWidget(buttonBox);
     }
 
@@ -110,6 +124,19 @@ public:
         return (widget->isNull());
     }
 
+public slots:
+    void onTriggerVideo(bool state)
+    {
+        if (buttonBox) {
+            buttonBox->button(QDialogButtonBox::Ok)->setDisabled(state);
+            buttonBox->button(QDialogButtonBox::Cancel)->setDisabled(state);
+        }
+
+        if (widget) {
+            widget->onTriggerVideo(state);
+        }
+    }
+
 protected:
     void accept()
     {
@@ -118,6 +145,7 @@ protected:
 
 private:
     LAUWebCameraWidget *widget;
+    QDialogButtonBox *buttonBox;
 };
 
 #endif // LAUWEBCAMERAWIDGET_H

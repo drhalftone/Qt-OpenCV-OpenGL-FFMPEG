@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-CONFIG += visage
+#CONFIG += visage
 
 QT += core gui multimedia widgets multimediawidgets opengl
 TARGET = LAUWebCamerarCapture
@@ -48,7 +48,12 @@ unix:macx {
     CONFIG        += c++11
     INCLUDEPATH   += /usr/local/include/opencv4
     DEPENDPATH    += /usr/local/include/opencv4
-    LIBS          += -L/usr/local/lib -lopencv_core -lopencv_objdetect -lopencv_imgproc -lopencv_calib3d -lopencv_highgui -lopencv_ml -lopencv_face
+    LIBS          += /usr/local/lib/libopencv_core.dylib /usr/local/lib/libopencv_objdetect.dylib
+    LIBS          += /usr/local/lib/libopencv_imgproc.dylib /usr/local/lib/libopencv_calib3d.dylib
+    LIBS          += /usr/local/lib/libopencv_highgui.dylib /usr/local/lib/libopencv_ml.dylib
+    LIBS          += /usr/local/lib/libopencv_face.dylib /usr/local/lib/libtiff.5.dylib
+
+    QMAKE_CXXFLAGS += -msse2 -msse3 -mssse3 -msse4.1
 
     QMAKE_INFO_PLIST = Info.plist
 
