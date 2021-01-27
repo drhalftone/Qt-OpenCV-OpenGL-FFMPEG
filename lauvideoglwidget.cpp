@@ -226,7 +226,7 @@ void LAUVideoGLWidget::paint()
                     videoTexture->bind();
                     program.setUniformValue("qt_texture", 0);
 #ifdef Q_OS_WIN
-                    program.setUniformValue("qt_flip", true);
+                    program.setUniformValue("qt_flip", false);
 #else
                     program.setUniformValue("qt_flip", true);
 #endif
