@@ -34,8 +34,8 @@ public:
             makeCurrent();
             QImage image(videoTexture->width(), videoTexture->height(), QImage::Format_ARGB32);
             videoTexture->bind();
-            glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_BYTE, (void*)image.constBits());
-            return(image);
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_BYTE, (void *)image.constBits());
+            return (image);
         }
         return (QImage());
     }
@@ -54,6 +54,7 @@ private:
     VisageSDK::VisageTracker *visageTracker;
     VisageSDK::FaceData faceData[16];
 #else
+    QObject *visageTracker;
     cv::Ptr<cv::Subdiv2D> subDivide;
     cv::Ptr<cv::CascadeClassifier> faceDetector;
     cv::Ptr<cv::face::Facemark> facemark;
