@@ -9,6 +9,9 @@ QUrl LAUWebCameraWidget::localURL = QUrl::fromLocalFile(QString("%1/videofile.mp
 /****************************************************************************/
 LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *parent) : QWidget(parent), mode(capture), thread(NULL), camera(NULL), recorder(NULL), imageCapture(NULL), surface(NULL)
 {
+    // SEE IF THERE IS A LEFTOVER VIDEO FILE FROM A PREVIOUS RUN OF THE SOFTWARE
+    saveVideoFile();
+
     this->setLayout(new QVBoxLayout());
     this->layout()->setContentsMargins(6, 6, 6, 6);
 
@@ -113,6 +116,11 @@ LAUWebCameraWidget::~LAUWebCameraWidget()
         camera->stop();
         delete camera;
     }
+
+    // DELETE TEMPORARY VIDEO RECORDING FILE IF IT EXISTS
+    if (QFile::exists(localURL.toLocalFile())) {
+        QFile().moveToTrash(localURL.toLocalFile());
+    }
 }
 
 /****************************************************************************/
@@ -143,39 +151,8 @@ void LAUWebCameraWidget::onTriggerVideo(bool state)
         // STOP RECORDING AND DELETE THE RECORDER
         recorder->stop();
 
-        // GET THE LAST USED DIRECTORY FROM SETTINGS
-        QSettings settings;
-        QString directory = settings.value("LAUWebCameraWidget::lastUsedDirectory", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
-        if (QDir().exists(directory) == false) {
-            directory = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-        }
-
-        QString filename;
-        for (int counter = 0; counter < 1000; counter++) {
-            if (counter < 10) {
-                filename = QString("%1/intubation00%2.mpg").arg(directory).arg(counter);
-            } else if (counter < 100) {
-                filename = QString("%1/intubation0%2.mpg").arg(directory).arg(counter);
-            } else {
-                filename = QString("%1/intubation%2.mpg").arg(directory).arg(counter);
-            }
-
-            if (QFile::exists(filename) == false) {
-                break;
-            }
-        }
-
-        // COPY TO A USER SPECIFIED FILE
-        filename = QFileDialog::getSaveFileName(nullptr, QString("Save video to disk (*.mpg)"), filename, QString("*.mpg"));
-        if (filename.isEmpty() == false) {
-            if (filename.toLower().endsWith(".mpg") == false) {
-                filename.append(".mpg");
-            }
-            settings.setValue("LAUWebCameraWidget::lastUsedDirectory", QFileInfo(filename).absolutePath());
-
-            // RENAME THE TEMPORARY RECORDING TO A PERMANENT FILE
-            QFile::rename(localURL.toLocalFile(), filename);
-        }
+        // LET THE USER SAVE THE VIDEO FILE TO DISK
+        saveVideoFile();
 
         // DELETE THE RECORDER
         recorder->deleteLater();
@@ -229,5 +206,50 @@ void LAUWebCameraWidget::grabImage()
             }
             image.save(filename, "TIFF");
         }
+    }
+}
+
+/****************************************************************************/
+/****************************************************************************/
+/****************************************************************************/
+void LAUWebCameraWidget::saveVideoFile()
+{
+    // MAKE SURE TEMPORARY VIDEO FILE EXISTS
+    if (QFile::exists(localURL.toLocalFile()) == false) {
+        return;
+    }
+
+    // GET THE LAST USED DIRECTORY FROM SETTINGS
+    QSettings settings;
+    QString directory = settings.value("LAUWebCameraWidget::lastUsedDirectory", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
+    if (QDir().exists(directory) == false) {
+        directory = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    }
+
+    QString filename;
+    for (int counter = 0; counter < 1000; counter++) {
+        if (counter < 10) {
+            filename = QString("%1/intubation00%2.mpg").arg(directory).arg(counter);
+        } else if (counter < 100) {
+            filename = QString("%1/intubation0%2.mpg").arg(directory).arg(counter);
+        } else {
+            filename = QString("%1/intubation%2.mpg").arg(directory).arg(counter);
+        }
+
+        if (QFile::exists(filename) == false) {
+            break;
+        }
+    }
+
+    // COPY TO A USER SPECIFIED FILE
+    filename = QFileDialog::getSaveFileName(nullptr, QString("Save video to disk (*.mpg)"), filename, QString("*.mpg"));
+    if (filename.isEmpty() == false) {
+        if (filename.toLower().endsWith(".mpg") == false) {
+            filename.append(".mpg");
+        }
+        settings.setValue("LAUWebCameraWidget::lastUsedDirectory", QFileInfo(filename).absolutePath());
+
+        // RENAME THE TEMPORARY RECORDING TO A PERMANENT FILE
+        QFile::rename(localURL.toLocalFile(), filename);
     }
 }
