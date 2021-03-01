@@ -120,7 +120,7 @@ LAUWebCameraWidget::~LAUWebCameraWidget()
 
     // DELETE TEMPORARY VIDEO RECORDING FILE IF IT EXISTS
     if (QFile::exists(localURL.toLocalFile())) {
-        QFile().moveToTrash(localURL.toLocalFile());
+        QFile::remove(localURL.toLocalFile());
     }
 }
 
