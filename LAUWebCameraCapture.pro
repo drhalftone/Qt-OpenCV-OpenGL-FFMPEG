@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 #CONFIG += visage
+CONFIG += ffmpeg
 
 QT += core gui multimedia widgets multimediawidgets opengl
 TARGET = LAUWebCamerarCapture
@@ -25,18 +26,20 @@ QMAKE_CXXFLAGS += -fdeclspec
 
 SOURCES += \
         main.cpp \
-        lauwebcamerawidget.cpp \
+        lauffmpegobject.cpp \
         lauvideosurface.cpp \
         lauvideoglwidget.cpp \
+        lauwebcamerawidget.cpp \
         laufacialfeaturedetectorglwidget.cpp \
         lauharriscornerdetectorglwidget.cpp \
         laurandomizepixelsglwidget.cpp \
         lausobeledgedetectorglwidget.cpp
 
 HEADERS += \
-        lauwebcamerawidget.h \
+        lauffmpegobject.h \
         lauvideosurface.h \
         lauvideoglwidget.h \
+        lauwebcamerawidget.h \
         laufacialfeaturedetectorglwidget.h \
         lauharriscornerdetectorglwidget.h \
         laurandomizepixelsglwidget.h \
@@ -75,13 +78,21 @@ unix:!macx {
 win32 {
     INCLUDEPATH += $$quote(C:/usr/include)
     DEPENDPATH  += $$quote(C:/usr/include)
-    LIBS        += -L$$quote(C:/usr/lib) -llibtiff_i -lopengl32
+    LIBS        += -L$$quote(C:/usr/lib) -ltiff -lopengl32
+    CONFIG      += c++11
 
     INCLUDEPATH   += $$quote(C:/usr/opencv/include)
     DEPENDPATH    += $$quote(C:/usr/opencv/include)
     LIBS          += -L$$quote(C:/usr/opencv/x64/vc15/lib)
-    CONFIG(release, debug|release): LIBS += -lopencv_core411 -lopencv_objdetect411 -lopencv_imgproc411 -lopencv_calib3d411 -lopencv_highgui411 -lopencv_ml411 -lopencv_face411
-    CONFIG(debug, debug|release):   LIBS += -lopencv_core411d -lopencv_objdetect411d -lopencv_imgproc411d -lopencv_calib3d411d -lopencv_highgui411d -lopencv_ml411d -lopencv_face411d
+    CONFIG(release, debug|release): LIBS += -lopencv_core411 -lopencv_objdetect411 -lopencv_imgproc411 -lopencv_calib3d411 -lopencv_highgui411 -lopencv_ml411 -lopencv_face411 -lopencv_videoio411
+    CONFIG(debug, debug|release):   LIBS += -lopencv_core411d -lopencv_objdetect411d -lopencv_imgproc411d -lopencv_calib3d411d -lopencv_highgui411d -lopencv_ml411d -lopencv_face411d -lopencv_videoio411d
+
+    ffmpeg {
+        INCLUDEPATH += $$quote(C:/usr/ffmpeg/include)
+        DEPENDPATH  += $$quote(C:/usr/ffmpeg/include)
+        LIBS        += -lmf -lmfplat -lmfplay -lmfreadwrite -lmfuuid -lStrmiids -lole32 -luser32 -lBcrypt
+        LIBS        += -L$$quote(C:/usr/ffmpeg/debug/lib) -lavcodec -lavdevice -lavfilter -lavformat -lavutil -lopus -lswresample -lswscale -lvpxmdd
+    }
 
     visage {
         DEFINES += USEVISAGE

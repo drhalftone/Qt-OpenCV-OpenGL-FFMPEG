@@ -42,6 +42,9 @@ LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *pa
     } else {
         label = new LAUVideoGLWidget();
     }
+#ifdef Q_OS_WIN
+    label->setVideoRecorder(&recorder);
+#endif
     label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->layout()->addWidget(label);
 
@@ -149,16 +152,30 @@ void LAUWebCameraWidget::onTriggerVideo(bool state)
     qDebug() << "Trigger video recording:" << state;
 
     if (recorder) {
+#ifndef Q_OS_WIN
+        // GET OUTPUT LOCATION
+        localURL = recorder->outputLocation();
+
         // STOP RECORDING AND DELETE THE RECORDER
         recorder->stop();
+#endif
+        // DELETE THE RECORDER
+#ifdef Q_OS_WIN
+        delete recorder;
+#else
+        recorder->deleteLater();
+#endif
+        recorder = nullptr;
 
         // LET THE USER SAVE THE VIDEO FILE TO DISK
         saveVideoFile();
-
-        // DELETE THE RECORDER
-        recorder->deleteLater();
-        recorder = nullptr;
     } else {
+#ifdef Q_OS_WIN
+        recorder = new cv::VideoWriter();
+        if (recorder->open(localURL.toString().toStdString(), cv::VideoWriter::fourcc('M','J','P','G'), 10.0, cv::Size(LAUWEBCAMERAWIDGETWIDTH, LAUWEBCAMERAWIDGETHEIGHT), true)){
+            qDebug() << "Recording to file:" << localURL.toString();
+        }
+#else
         // CREATE NEW RECORDER
         recorder = new QMediaRecorder(camera);
 
@@ -171,6 +188,7 @@ void LAUWebCameraWidget::onTriggerVideo(bool state)
         // SET THE SINK
         recorder->setOutputLocation(localURL);
         recorder->record();
+#endif
     }
 }
 
