@@ -74,7 +74,11 @@ private:
     LAUVideoGLWidget *label;
     QThread *thread;
     QCamera *camera;
+#ifdef Q_OS_WIN
+    cv::VideoWriter *recorder;
+#else
     QMediaRecorder *recorder;
+#endif
     QCameraImageCapture *imageCapture;
     LAUVideoSurface *surface;
 
@@ -97,7 +101,7 @@ public:
         // SET THE LAYOUT AND DISPLAY OUR WIDGET INSIDE OF IT
         this->setWindowTitle(QString("Video Recorder"));
         this->setLayout(new QVBoxLayout());
-        this->layout()->setContentsMargins(0, 0, 0, 0);
+        this->layout()->setContentsMargins(6, 6, 6, 6);
         this->layout()->addWidget(widget);
 
         buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
