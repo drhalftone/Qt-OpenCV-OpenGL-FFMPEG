@@ -60,6 +60,15 @@ unix:macx {
 
     QMAKE_INFO_PLIST = Info.plist
 
+    ffmpeg {
+        INCLUDEPATH   += /usr/local/include
+        DEPENDPATH    += /usr/local/include
+        LIBS          += /usr/local/lib/libavcodec.dylib /usr/local/lib/libavdevice.dylib
+        LIBS          += /usr/local/lib/libavfilter.dylib /usr/local/lib/libavformat.dylib
+        LIBS          += /usr/local/lib/libavutil.dylib /usr/local/lib/libopus.dylib
+        LIBS          += /usr/local/lib/libswresample.dylib /usr/local/lib/libswscale
+    }
+
     visage {
         DEFINES += USEVISAGE
         INCLUDEPATH += $$PWD/../visageSDK-macOS/include
@@ -87,6 +96,7 @@ win32 {
     CONFIG(release, debug|release): LIBS += -lopencv_core411 -lopencv_objdetect411 -lopencv_imgproc411 -lopencv_calib3d411 -lopencv_highgui411 -lopencv_ml411 -lopencv_face411 -lopencv_videoio411
     CONFIG(debug, debug|release):   LIBS += -lopencv_core411d -lopencv_objdetect411d -lopencv_imgproc411d -lopencv_calib3d411d -lopencv_highgui411d -lopencv_ml411d -lopencv_face411d -lopencv_videoio411d
 
+    # GET WINDOWS LIBRARIES FROM https://github.com/mcmtroffaes/ffmpeg-msvc-build
     ffmpeg {
         INCLUDEPATH += $$quote(C:/usr/ffmpeg/include)
         DEPENDPATH  += $$quote(C:/usr/ffmpeg/include)
