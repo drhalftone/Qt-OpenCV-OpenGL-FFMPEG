@@ -66,7 +66,7 @@ unix:macx {
         LIBS          += /usr/local/lib/libavcodec.dylib /usr/local/lib/libavdevice.dylib
         LIBS          += /usr/local/lib/libavfilter.dylib /usr/local/lib/libavformat.dylib
         LIBS          += /usr/local/lib/libavutil.dylib /usr/local/lib/libopus.dylib
-        LIBS          += /usr/local/lib/libswresample.dylib /usr/local/lib/libswscale
+        LIBS          += /usr/local/lib/libswresample.dylib /usr/local/lib/libswscale.dylib
     }
 
     visage {
