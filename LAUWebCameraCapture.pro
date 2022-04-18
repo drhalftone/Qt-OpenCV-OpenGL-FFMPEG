@@ -24,6 +24,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 QMAKE_CXXFLAGS += -fdeclspec
 
 SOURCES += \
+        lautiredetectorglfilter.cpp \
         main.cpp \
         lauwebcamerawidget.cpp \
         lauvideosurface.cpp \
@@ -34,6 +35,7 @@ SOURCES += \
         lausobeledgedetectorglwidget.cpp
 
 HEADERS += \
+        lautiredetectorglfilter.h \
         lauwebcamerawidget.h \
         lauvideosurface.h \
         lauvideoglwidget.h \

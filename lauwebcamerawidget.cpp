@@ -13,12 +13,15 @@ LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *pa
     items << QString("Facial Features");
     items << QString("Harris Corners");
     items << QString("Randomized Pixels");
+    items << QString("Tire Tread");
     items << QString("Raw Video");
     items << QString("Sobel Edges");
-    QString string = QInputDialog::getItem(nullptr, QString("Web Camera Widget"), QString("Select video filter"), items);
+    QString string = QInputDialog::getItem(nullptr, QString("Web Camera Widget"), QString("Select video filter"), items, 3);
 
     if (string == QString("Facial Features")) {
         label = new LAUFacialFeatureDetectorGLWidget();
+    } else if (string == QString("Tire Tread")) {
+        label = new LAUTireDetectorGLWidget();
     } else if (string == QString("Harris Corners")) {
         label = new LAUHarrisCornerDetectorGLWidget();
     } else if (string == QString("Randomized Pixels")) {

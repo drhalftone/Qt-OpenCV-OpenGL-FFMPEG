@@ -21,6 +21,7 @@
 #include <QCameraImageCapture>
 
 #include "lauvideosurface.h"
+#include "lautiredetectorglfilter.h"
 #include "laurandomizepixelsglwidget.h"
 #include "lausobeledgedetectorglwidget.h"
 #include "lauharriscornerdetectorglwidget.h"
