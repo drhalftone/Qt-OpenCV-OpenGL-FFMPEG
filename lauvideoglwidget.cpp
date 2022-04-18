@@ -23,6 +23,23 @@ void LAUVideoGLWidget::setFrame(const QVideoFrame &frame)
 {
     QVideoFrame localFrame = frame;
     if (localFrame.map(QAbstractVideoBuffer::ReadOnly)) {
+#ifdef Q_OS_WIN
+        // PASS THE VIDEO FRAME TO THE VIDEO RECORDER
+        if (*recorder && (*recorder)->isOpened()){
+            cv::Mat image;
+            switch (frame.pixelFormat()){
+            case QVideoFrame::Format_ABGR32:
+                image = cv::Mat(frame.height(), frame.width(), CV_8UC4, (void*)frame.bits(), frame.bytesPerLine());
+                break;
+            case QVideoFrame::Format_RGB24:
+                image = cv::Mat(frame.height(), frame.width(), CV_8UC3, (void*)frame.bits(), frame.bytesPerLine());
+                break;
+            default:
+                image = cv::Mat(frame.height(), frame.width(), CV_8UC3, (void*)frame.bits(), frame.bytesPerLine());
+            }
+            (*recorder)->write(image);
+        }
+#endif
         // REPORT FRAME RATE TO THE CONSOLE
         counter++;
         if (counter >= 30) {
@@ -226,9 +243,9 @@ void LAUVideoGLWidget::paint()
                     videoTexture->bind();
                     program.setUniformValue("qt_texture", 0);
 #ifdef Q_OS_WIN
-                    program.setUniformValue("qt_flip", true);
-#else
                     program.setUniformValue("qt_flip", false);
+#else
+                    program.setUniformValue("qt_flip", true);
 #endif
                     // TELL OPENGL PROGRAMMABLE PIPELINE HOW TO LOCATE VERTEX POSITION DATA
                     program.setAttributeBuffer("qt_vertex", GL_FLOAT, 0, 4, 4 * sizeof(float));

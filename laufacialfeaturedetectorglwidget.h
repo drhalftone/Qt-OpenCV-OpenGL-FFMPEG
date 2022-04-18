@@ -9,11 +9,12 @@
 #ifdef USEVISAGE
 #include "visageVision.h"
 #include "VisageTracker.h"
-#else
+#endif
+
 #include "opencv2/face.hpp"
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
-#endif
+#include "opencv2/highgui/highgui.hpp"
 
 #include "lauvideoglwidget.h"
 
@@ -29,8 +30,12 @@ public:
 
     QImage grabImage()
     {
-        if (frameBufferObject) {
-            return (frameBufferObject->toImage());
+        if (videoTexture) {
+            makeCurrent();
+            QImage image(videoTexture->width(), videoTexture->height(), QImage::Format_ARGB32);
+            videoTexture->bind();
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_BYTE, (void *)image.constBits());
+            return (image);
         }
         return (QImage());
     }
@@ -46,13 +51,15 @@ private:
 
 #ifdef USEVISAGE
     VsImage *inputImage;
-    VisageSDK::VisageFeaturesDetector *visageFeaturesDetector;
+    VisageSDK::VisageTracker *visageTracker;
+    VisageSDK::FaceData faceData[16];
 #else
-    cv::Mat videoFrame, grayFrame;
+    QObject *visageTracker;
     cv::Ptr<cv::Subdiv2D> subDivide;
     cv::Ptr<cv::CascadeClassifier> faceDetector;
     cv::Ptr<cv::face::Facemark> facemark;
 #endif
+    cv::Mat videoFrame, grayFrame;
 };
 
 #endif // LAUFACIALFEATUREDETECTORGLWIDGET_H

@@ -18,6 +18,17 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLPixelTransferOptions>
 
+#ifdef Q_OS_WIN
+#include <opencv2/core.hpp>
+#include <opencv2/videoio.hpp>
+#include <opencv2/highgui.hpp>
+#include <iostream>
+#include <stdio.h>
+
+using namespace cv;
+using namespace std;
+#endif
+
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
@@ -38,6 +49,13 @@ public:
     {
         return (vertexArrayObject.isCreated());
     }
+
+#ifdef Q_OS_WIN
+    void setVideoRecorder(cv::VideoWriter **handle)
+    {
+        recorder = handle;
+    }
+#endif
 
     void setFrame(const QVideoFrame &frame);
     void setFrame(QImage frame);
@@ -75,6 +93,10 @@ protected:
     {
         paint();
     }
+
+#ifdef Q_OS_WIN
+    cv::VideoWriter **recorder;
+#endif
 
     QOpenGLVertexArrayObject vertexArrayObject;
     QOpenGLBuffer quadVertexBuffer, quadIndexBuffer;
