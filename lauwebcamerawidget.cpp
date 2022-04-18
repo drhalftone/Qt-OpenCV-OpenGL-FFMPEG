@@ -1,4 +1,10 @@
 #include "lauwebcamerawidget.h"
+#include "lautiredetectorglfilter.h"
+#include "laurandomizepixelsglwidget.h"
+#include "lausobeledgedetectorglwidget.h"
+#include "lauharriscornerdetectorglwidget.h"
+#include "laufacialfeaturedetectorglwidget.h"
+
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QSettings>
@@ -21,6 +27,7 @@ LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *pa
     items << QString("Facial Features");
     items << QString("Harris Corners");
     items << QString("Randomized Pixels");
+    items << QString("Tire Detector");
     items << QString("Raw Video");
     items << QString("Sobel Edges");
 
@@ -32,6 +39,8 @@ LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *pa
             label = new LAUVideoGLWidget();
         } else if (string == QString("Facial Features")) {
             label = new LAUFacialFeatureDetectorGLWidget();
+        } else if (string == QString("Tire Detector")) {
+            label = new LAUTireDetectorGLWidget();
         } else if (string == QString("Harris Corners")) {
             label = new LAUHarrisCornerDetectorGLWidget();
         } else if (string == QString("Randomized Pixels")) {
@@ -172,7 +181,7 @@ void LAUWebCameraWidget::onTriggerVideo(bool state)
     } else {
 #ifdef Q_OS_WIN
         recorder = new cv::VideoWriter();
-        if (recorder->open(localURL.toString().toStdString(), cv::VideoWriter::fourcc('M','J','P','G'), 10.0, cv::Size(LAUWEBCAMERAWIDGETWIDTH, LAUWEBCAMERAWIDGETHEIGHT), true)){
+        if (recorder->open(localURL.toString().toStdString(), cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 10.0, cv::Size(LAUWEBCAMERAWIDGETWIDTH, LAUWEBCAMERAWIDGETHEIGHT), true)) {
             qDebug() << "Recording to file:" << localURL.toString();
         }
 #else
