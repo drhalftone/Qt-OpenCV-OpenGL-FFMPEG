@@ -263,7 +263,11 @@ void LAUHarrisCornerDetectorGLWidget::paint()
                         glActiveTexture(GL_TEXTURE0);
                         glBindTexture(GL_TEXTURE_2D, frameBufferObjects[4]->texture());
                         program.setUniformValue("qt_texture", 0);
-
+#ifdef Q_OS_WIN
+                        program.setUniformValue("qt_flip", false);
+#else
+                        program.setUniformValue("qt_flip", true);
+#endif
                         // TELL OPENGL PROGRAMMABLE PIPELINE HOW TO LOCATE VERTEX POSITION DATA
                         program.setAttributeBuffer("qt_vertex", GL_FLOAT, 0, 4, 4 * sizeof(float));
                         program.enableAttributeArray("qt_vertex");

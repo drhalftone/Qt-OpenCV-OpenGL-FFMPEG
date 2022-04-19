@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 #CONFIG += visage
-CONFIG += ffmpeg
+CONFIG -= ffmpeg
 
 QT += core gui multimedia widgets multimediawidgets opengl
 TARGET = LAUWebCamerarCapture
@@ -25,8 +25,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 QMAKE_CXXFLAGS += -fdeclspec
 
 SOURCES += \
+        lauhistogramequalizationglwidget.cpp \
         main.cpp \
-        lauffmpegobject.cpp \
         lauvideosurface.cpp \
         lauvideoglwidget.cpp \
         lauwebcamerawidget.cpp \
@@ -36,7 +36,7 @@ SOURCES += \
         lausobeledgedetectorglwidget.cpp
 
 HEADERS += \
-        lauffmpegobject.h \
+        lauhistogramequalizationglwidget.h \
         lauvideosurface.h \
         lauvideoglwidget.h \
         lauwebcamerawidget.h \
@@ -46,6 +46,12 @@ HEADERS += \
         lausobeledgedetectorglwidget.h
 
 RESOURCES += lauwebcameracapture.qrc
+
+ffmpeg {
+    DEFINES += INCLUDE_FFMPEG
+    HEADERS += lauffmpegobject.h
+    SOURCES += lauffmpegobject.cpp
+}
 
 unix:macx {
     CONFIG        += c++11

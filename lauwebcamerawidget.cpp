@@ -1,4 +1,10 @@
 #include "lauwebcamerawidget.h"
+#include "lauhistogramequalizationglwidget.h"
+#include "laurandomizepixelsglwidget.h"
+#include "lausobeledgedetectorglwidget.h"
+#include "lauharriscornerdetectorglwidget.h"
+#include "laufacialfeaturedetectorglwidget.h"
+
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QSettings>
@@ -18,6 +24,7 @@ LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *pa
 
     // ASK THE USER WHAT FILTER THEY WANT TO IMPLEMENT
     QStringList items;
+    items << QString("Histogram Equalize");
     items << QString("Facial Features");
     items << QString("Harris Corners");
     items << QString("Randomized Pixels");
@@ -25,11 +32,13 @@ LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *pa
     items << QString("Sobel Edges");
 
     bool ok = false;
-    QString string = QInputDialog::getItem(nullptr, QString("Web Camera Widget"), QString("Select video filter"), items, 3, false, &ok);
+    QString string = QInputDialog::getItem(nullptr, QString("Web Camera Widget"), QString("Select video filter"), items, 0, false, &ok);
 
     if (ok) {
         if (string == QString("Raw Video")) {
             label = new LAUVideoGLWidget();
+        } else if (string == QString("Histogram Equalize")) {
+            label = new LAUHistogramEqualizationGLWidget();
         } else if (string == QString("Facial Features")) {
             label = new LAUFacialFeatureDetectorGLWidget();
         } else if (string == QString("Harris Corners")) {

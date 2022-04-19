@@ -22,10 +22,6 @@
 #include <QCameraImageCapture>
 
 #include "lauvideosurface.h"
-#include "laurandomizepixelsglwidget.h"
-#include "lausobeledgedetectorglwidget.h"
-#include "lauharriscornerdetectorglwidget.h"
-#include "laufacialfeaturedetectorglwidget.h"
 
 #define LAUWEBCAMERAWIDGETWIDTH  640
 #define LAUWEBCAMERAWIDGETHEIGHT 480

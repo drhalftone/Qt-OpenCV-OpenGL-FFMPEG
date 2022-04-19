@@ -33,4 +33,5 @@ private:
     QOpenGLFramebufferObject *frameBufferObject;
     QOpenGLShaderProgram programA;
 };
+
 #endif // LAUSOBELEDGEDETECTORGLWIDGET_H

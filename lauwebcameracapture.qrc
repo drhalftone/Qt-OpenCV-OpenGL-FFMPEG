@@ -40,5 +40,10 @@
         <file>Shaders/calTagXYZW.vert</file>
         <file>Shaders/filterDrawFace.vert</file>
         <file>Shaders/filterDrawFace.frag</file>
+        <file>Shaders/rgbaToHistogramFilter.vert</file>
+        <file>Shaders/rgbaToHistogramFilter.geom</file>
+        <file>Shaders/rgbaToHistogramFilter.frag</file>
+        <file>Shaders/rescaleRGBAFilter.frag</file>
+        <file>Shaders/rescaleRGBAFilter.vert</file>
     </qresource>
 </RCC>
