@@ -106,8 +106,9 @@ void LAUHistogramEqualizationGLWidget::process()
 
         // CALCULATE THE SIZE OF THE FRAME BUFFER OBJECT TO HOLD THE HISTOGRAMS
         int blocksPerRow = 10;
+        int blocksPerCol = 10;
         int blockWidth = qCeil((float)videoTexture->width() / (float)blocksPerRow);
-        int blockHeght = qCeil((float)videoTexture->height() / (float)blocksPerRow);
+        int blockHeght = qCeil((float)videoTexture->height() / (float)blocksPerCol);
 
         int numberOfBlocksX = qCeil((float)videoTexture->width() / (float)blockWidth);
         int numberOfBlocksY = qCeil((float)videoTexture->height() / (float)blockHeght);
@@ -167,6 +168,7 @@ void LAUHistogramEqualizationGLWidget::process()
                         programA.setUniformValue("qt_blockSizeX", blockWidth);
                         programA.setUniformValue("qt_blockSizeY", blockHeght);
                         programA.setUniformValue("qt_blocksPerRow", blocksPerRow);
+                        programA.setUniformValue("qt_blocksPerCol", blocksPerCol);
 
                         float geometrySlope = 2.0f / (float)frameBufferObjectA->height();
                         float geometryOffst = 1.0f / (float)frameBufferObjectA->height() - 1.0f;
@@ -202,7 +204,7 @@ void LAUHistogramEqualizationGLWidget::process()
             __m128 numPixelsInSubblockVec = _mm_set1_ps(buffer[255 * 4 + 3]);
 
             // SET THE UPPER BOUND ON THE HISTOGRAM DISTRIBUTION
-            __m128 vecMx = _mm_set1_ps(0.005f);
+            __m128 vecMx = _mm_set1_ps(0.01f);
 
             // GENERATE A CLIPPED HISTOGRAM AND COLLECT THE TRIMMED PART
             __m128 cumSumA = _mm_set1_ps(0.0f);
@@ -254,6 +256,7 @@ void LAUHistogramEqualizationGLWidget::process()
                         programB.setUniformValue("qt_blockSizeX", blockWidth);
                         programB.setUniformValue("qt_blockSizeY", blockHeght);
                         programB.setUniformValue("qt_blocksPerRow", blocksPerRow);
+                        programB.setUniformValue("qt_blocksPerCol", blocksPerCol);
 
                         // TELL OPENGL PROGRAMMABLE PIPELINE HOW TO LOCATE VERTEX POSITION DATA
                         glVertexAttribPointer(programB.attributeLocation("qt_vertex"), 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
@@ -267,6 +270,11 @@ void LAUHistogramEqualizationGLWidget::process()
                 }
                 programB.release();
             }
+            //static LAUMemoryObject object(frameBufferObjectB->width(), frameBufferObjectB->height(), 4, sizeof(float));
+            //glBindTexture(GL_TEXTURE_2D, frameBufferObjectB->texture());
+            //glPixelStorei(GL_PACK_ALIGNMENT, 1);
+            //glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, object.constPointer());
+            //object.save(QString("/Users/dllau/Documents/histogram.tif"));
             frameBufferObjectB->release();
         }
     }
