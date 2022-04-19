@@ -192,7 +192,6 @@ void LAUHistogramEqualizationGLWidget::process()
         glBindTexture(GL_TEXTURE_2D, frameBufferObjectA->texture());
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, histogramObject.constPointer());
-        //histogramObject.save(QString("/Users/dllau/Desktop/histogramA.tif"));
 
         // EQUALIZE THE HISTOGRAMS
         for (unsigned int row = 0; row < histogramObject.height(); row++){
@@ -209,10 +208,9 @@ void LAUHistogramEqualizationGLWidget::process()
                 _mm_store_ps(&buffer[4*col], _mm_div_ps(cumSumVec, numPixelsInSubblockVec));
             }
         }
-        //histogramObject.save(QString("/Users/dllau/Desktop/histogramB.tif"));
 
         // UPLOAD THE MODIFIED HISTOGRAMS BACK TO THE GPU
-        histogramTexture->setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, (const void *)histogramObject.constPointer());
+        histogramTexture->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, (const void *)histogramObject.constPointer());
 
         // BIND THE FRAME BUFFER OBJECT FOR PROCESSING THE HISTOGRAM
         // ALONG WITH THE GLSL PROGRAMS THAT WILL DO THE PROCESSING
@@ -229,7 +227,7 @@ void LAUHistogramEqualizationGLWidget::process()
                         // BIND THE TEXTURE OF THE INPUT IMAGE
                         glActiveTexture(GL_TEXTURE0);
                         videoTexture->bind();
-                        programA.setUniformValue("qt_texture", 0);
+                        programB.setUniformValue("qt_texture", 0);
 
                         // BIND THE TEXTURE OF THE HISTOGRAM TEXTURE
                         glActiveTexture(GL_TEXTURE1);
