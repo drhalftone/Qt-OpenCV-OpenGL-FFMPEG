@@ -26,6 +26,7 @@ QMAKE_CXXFLAGS += -fdeclspec
 
 SOURCES += \
         main.cpp \
+        laumemoryobject.cpp \
         lauvideosurface.cpp \
         lauvideoglwidget.cpp \
         lauwebcamerawidget.cpp \
@@ -33,9 +34,11 @@ SOURCES += \
         laurandomizepixelsglwidget.cpp \
         lausobeledgedetectorglwidget.cpp \
         lauharriscornerdetectorglwidget.cpp \
+        lauhistogramequalizationglwidget.cpp \
         laufacialfeaturedetectorglwidget.cpp
 
 HEADERS += \
+        laumemoryobject.h \
         lauvideosurface.h \
         lauvideoglwidget.h \
         lauwebcamerawidget.h \
@@ -43,6 +46,7 @@ HEADERS += \
         laurandomizepixelsglwidget.h \
         lausobeledgedetectorglwidget.h \
         lauharriscornerdetectorglwidget.h \
+        lauhistogramequalizationglwidget.h \
         laufacialfeaturedetectorglwidget.h
 
 RESOURCES += lauwebcameracapture.qrc
@@ -54,8 +58,8 @@ ffmpeg {
 
 unix:macx {
     CONFIG        += c++11
-    INCLUDEPATH   += /usr/local/include/opencv4
-    DEPENDPATH    += /usr/local/include/opencv4
+    INCLUDEPATH   += /usr/local/include/opencv4 /usr/local/include/TIFF
+    DEPENDPATH    += /usr/local/include/opencv4 /usr/local/include/TIFF
     LIBS          += /usr/local/lib/libopencv_core.dylib /usr/local/lib/libopencv_objdetect.dylib
     LIBS          += /usr/local/lib/libopencv_imgproc.dylib /usr/local/lib/libopencv_calib3d.dylib
     LIBS          += /usr/local/lib/libopencv_highgui.dylib /usr/local/lib/libopencv_ml.dylib

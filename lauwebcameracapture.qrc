@@ -42,5 +42,10 @@
         <file>Shaders/filterDrawFace.frag</file>
         <file>Shaders/filterSkewBlur.vert</file>
         <file>Shaders/filterSkewBlur.frag</file>
+        <file>Shaders/equalizeHistogramRGBAFilter.frag</file>
+        <file>Shaders/equalizeHistogramRGBAFilter.vert</file>
+        <file>Shaders/rgbaToHistogramFilter.frag</file>
+        <file>Shaders/rgbaToHistogramFilter.geom</file>
+        <file>Shaders/rgbaToHistogramFilter.vert</file>
     </qresource>
 </RCC>
