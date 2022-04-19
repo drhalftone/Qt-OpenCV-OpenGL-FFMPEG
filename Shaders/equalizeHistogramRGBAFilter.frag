@@ -20,4 +20,7 @@ void main()
     qt_fragColor.g = texelFetch(qt_histogram, ivec2(xCoord.g, yCoord), 0).g;
     qt_fragColor.b = texelFetch(qt_histogram, ivec2(xCoord.b, yCoord), 0).b;
     qt_fragColor.a = 1.0f;
+
+    qt_fragColor.g = qt_fragColor.r;
+    qt_fragColor.b = qt_fragColor.r;
 }

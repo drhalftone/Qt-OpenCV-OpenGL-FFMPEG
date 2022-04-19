@@ -9,13 +9,13 @@ LAUHistogramEqualizationGLWidget::~LAUHistogramEqualizationGLWidget()
 {
     if (wasInitialized()) {
         makeCurrent();
-        if (frameBufferObjectA){
+        if (frameBufferObjectA) {
             delete frameBufferObjectA;
         }
-        if (frameBufferObjectB){
+        if (frameBufferObjectB) {
             delete frameBufferObjectB;
         }
-        if (histogramTexture){
+        if (histogramTexture) {
             delete histogramTexture;
         }
     }
@@ -59,7 +59,7 @@ void LAUHistogramEqualizationGLWidget::process()
 
     // SEE IF WE NEED NEW FBOS
     if (videoTexture) {
-        if (pixlVertexBuffer.isCreated() == false){
+        if (pixlVertexBuffer.isCreated() == false) {
             // CREATE A BUFFER TO HOLD THE ROW AND COLUMN COORDINATES OF IMAGE PIXELS FOR THE TEXEL FETCHES
             pixlVertexBuffer = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
             pixlVertexBuffer.create();
@@ -81,7 +81,7 @@ void LAUHistogramEqualizationGLWidget::process()
             }
         }
 
-        if (pixlIndexBuffer.isCreated() == false){
+        if (pixlIndexBuffer.isCreated() == false) {
             // CREATE AN INDEX BUFFER FOR THE RESULTING POINT CLOUD DRAWN AS TRIANGLES
             pixlIndexBuffer = QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
             pixlIndexBuffer.create();
@@ -113,7 +113,7 @@ void LAUHistogramEqualizationGLWidget::process()
         int numberOfBlocksY = qCeil((float)videoTexture->height() / (float)blockHeght);
         int numberOfBlocks = numberOfBlocksX * numberOfBlocksY;
 
-        if (frameBufferObjectA == nullptr){
+        if (frameBufferObjectA == nullptr) {
             // CREATE THE FRAME BUFFER OBJECT TO HOLD THE HISTOGRAMS OF THE INCOMING TEXTURE
             QOpenGLFramebufferObjectFormat frameBufferObjectFormat;
             frameBufferObjectFormat.setInternalTextureFormat(GL_RGBA32F);
@@ -126,7 +126,7 @@ void LAUHistogramEqualizationGLWidget::process()
             histogramObject = LAUMemoryObject(frameBufferObjectA->width(), frameBufferObjectA->height(), 4, sizeof(float));
 
             // CREATE TEXTURE FOR HOLDING THE MODIFIED HISTOGRAMS FOR EQUALIZING THE INPUT IMAGE
-            if (histogramTexture == nullptr){
+            if (histogramTexture == nullptr) {
                 histogramTexture = new QOpenGLTexture(QOpenGLTexture::Target2D);
                 histogramTexture->setSize(frameBufferObjectA->width(), frameBufferObjectA->height());
                 histogramTexture->setFormat(QOpenGLTexture::RGBA32F);
@@ -137,7 +137,7 @@ void LAUHistogramEqualizationGLWidget::process()
             }
         }
 
-        if (frameBufferObjectB == nullptr){
+        if (frameBufferObjectB == nullptr) {
             // CREATE THE FRAME BUFFER OBJECT TO HOLD THE HISTOGRAM EQUALIZED RESULTS AS A TEXTURE
             QOpenGLFramebufferObjectFormat frameBufferObjectFormat;
             frameBufferObjectFormat.setInternalTextureFormat(GL_RGBA32F);
@@ -168,8 +168,8 @@ void LAUHistogramEqualizationGLWidget::process()
                         programA.setUniformValue("qt_blockSizeY", blockHeght);
                         programA.setUniformValue("qt_blocksPerRow", blocksPerRow);
 
-                        float geometrySlope = 2.0f/(float)frameBufferObjectA->height();
-                        float geometryOffst = 1.0f/(float)frameBufferObjectA->height() - 1.0f;
+                        float geometrySlope = 2.0f / (float)frameBufferObjectA->height();
+                        float geometryOffst = 1.0f / (float)frameBufferObjectA->height() - 1.0f;
                         programA.setUniformValue("qt_geometryMappingSlope", geometrySlope);
                         programA.setUniformValue("qt_geometryMappingOffst", geometryOffst);
 
@@ -194,18 +194,34 @@ void LAUHistogramEqualizationGLWidget::process()
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, histogramObject.constPointer());
 
         // EQUALIZE THE HISTOGRAMS
-        for (unsigned int row = 0; row < histogramObject.height(); row++){
+        for (unsigned int row = 0; row < histogramObject.height(); row++) {
             // GET A POINTER TO THE CURRENT HISTOGRAM
-            float *buffer = (float*)histogramObject.constScanLine(row);
+            float *buffer = (float *)histogramObject.constScanLine(row);
 
             // GET THE NUMBER OF PIXELS THE CURRENT HISTOGRAM (ALPHA VALUE OF ELEMENT IN THE HISTOGRAM)
-            __m128 numPixelsInSubblockVec = _mm_set1_ps(buffer[255*4 + 3]);
+            __m128 numPixelsInSubblockVec = _mm_set1_ps(buffer[255 * 4 + 3]);
 
-            // NOW GENERATE CUMMULATIVE SUM OF THE HISTOGRAM
-            __m128 cumSumVec = _mm_set1_ps(0.0f);
-            for (unsigned int col = 0; col < 256; col++){
-                cumSumVec = _mm_add_ps(cumSumVec, _mm_load_ps(&buffer[4*col]));
-                _mm_store_ps(&buffer[4*col], _mm_div_ps(cumSumVec, numPixelsInSubblockVec));
+            // SET THE UPPER BOUND ON THE HISTOGRAM DISTRIBUTION
+            __m128 vecMx = _mm_set1_ps(0.005f);
+
+            // GENERATE A CLIPPED HISTOGRAM AND COLLECT THE TRIMMED PART
+            __m128 cumSumA = _mm_set1_ps(0.0f);
+            for (unsigned int col = 0; col < 256; col++) {
+                __m128 pixA = _mm_div_ps(_mm_load_ps(&buffer[4 * col]), numPixelsInSubblockVec);
+                __m128 pixB = _mm_min_ps(pixA, vecMx);
+                _mm_store_ps(&buffer[4 * col], pixB);
+                cumSumA = _mm_add_ps(cumSumA, _mm_sub_ps(pixA, pixB));
+            }
+
+            // DETERMINE HOW MUCH TO TRIMMED AREA TO DISTRIBUTE OVER ALL BINS
+            cumSumA = _mm_div_ps(cumSumA, _mm_set1_ps(256.0));
+
+            // ITERATION THROUGH HISTOGRAM CALCULATING CUMMULATIVE DISTRIBUTION FUNCTION
+            __m128 cumSumB = _mm_set1_ps(0.0f);
+            for (unsigned int col = 0; col < 256; col++) {
+                __m128 pix = _mm_add_ps(_mm_load_ps(&buffer[4 * col]), cumSumA);
+                cumSumB = _mm_add_ps(cumSumB, pix);
+                _mm_store_ps(&buffer[4 * col], cumSumB);
             }
         }
 
