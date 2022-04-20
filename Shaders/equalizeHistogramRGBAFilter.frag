@@ -30,10 +30,10 @@ void main()
     // CALCULATE XY-COORDINATES INTO HISTOGRAM TEXTURE
     ivec4 xCoord = ivec4(255.0 * qt_scale * texelFetch(qt_texture, ivec2(gl_FragCoord.xy), 0));
 
-    int yCoordTopLft = (qt_blocksPerCol * (int(topLft.x) / qt_blockSizeX)) + (int(topLft.y) / qt_blockSizeY);
-    int yCoordTopRgt = (qt_blocksPerCol * (int(topRgt.x) / qt_blockSizeX)) + (int(topRgt.y) / qt_blockSizeY);
-    int yCoordBotLft = (qt_blocksPerCol * (int(botLft.x) / qt_blockSizeX)) + (int(botLft.y) / qt_blockSizeY);
-    int yCoordBotRgt = (qt_blocksPerCol * (int(botRgt.x) / qt_blockSizeX)) + (int(botRgt.y) / qt_blockSizeY);
+    int yCoordTopLft = qt_blocksPerCol * int(topLft.x) + int(topLft.y);
+    int yCoordTopRgt = qt_blocksPerCol * int(topRgt.x) + int(topRgt.y);
+    int yCoordBotLft = qt_blocksPerCol * int(botLft.x) + int(botLft.y);
+    int yCoordBotRgt = qt_blocksPerCol * int(botRgt.x) + int(botRgt.y);
 
     vec4 pixTopLft;
     pixTopLft.r = texelFetch(qt_histogram, ivec2(xCoord.r, yCoordTopLft), 0).r;

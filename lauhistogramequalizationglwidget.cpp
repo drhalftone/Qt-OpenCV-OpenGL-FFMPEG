@@ -204,7 +204,7 @@ void LAUHistogramEqualizationGLWidget::process()
             __m128 numPixelsInSubblockVec = _mm_set1_ps(buffer[255 * 4 + 3]);
 
             // SET THE UPPER BOUND ON THE HISTOGRAM DISTRIBUTION
-            __m128 vecMx = _mm_set1_ps(0.01f);
+            __m128 vecMx = _mm_set1_ps(0.025f);
 
             // GENERATE A CLIPPED HISTOGRAM AND COLLECT THE TRIMMED PART
             __m128 cumSumA = _mm_set1_ps(0.0f);
@@ -226,6 +226,7 @@ void LAUHistogramEqualizationGLWidget::process()
                 _mm_store_ps(&buffer[4 * col], cumSumB);
             }
         }
+        //histogramObject.save(QString("/Users/dllau/Documents/histogramObject.tif"));
 
         // UPLOAD THE MODIFIED HISTOGRAMS BACK TO THE GPU
         histogramTexture->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, (const void *)histogramObject.constPointer());
