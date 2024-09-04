@@ -6,6 +6,7 @@
 #include "lauhistogramequalizationglwidget.h"
 #include "laufacialfeaturedetectorglwidget.h"
 
+#include <QCameraInfo>
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QSettings>
@@ -18,7 +19,7 @@ QUrl LAUWebCameraWidget::localURL = QUrl::fromLocalFile(QString("%1/videofile.mp
 LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *parent) : QWidget(parent), mode(capture), thread(NULL), camera(NULL), recorder(NULL), imageCapture(NULL), surface(NULL)
 {
     // SEE IF THERE IS A LEFTOVER VIDEO FILE FROM A PREVIOUS RUN OF THE SOFTWARE
-    saveVideoFile();
+    //saveVideoFile();
 
     this->setLayout(new QVBoxLayout());
     this->layout()->setContentsMargins(6, 6, 6, 6);
@@ -76,6 +77,8 @@ LAUWebCameraWidget::LAUWebCameraWidget(QCamera::CaptureMode capture, QWidget *pa
         }
     } else if (strings.count() == 1) {
         camera = new QCamera(cameras.first());
+    } else {
+        QMessageBox::warning(this, QString("LAUWebCam"), QString("No camera available."));
     }
 
     if (camera) {

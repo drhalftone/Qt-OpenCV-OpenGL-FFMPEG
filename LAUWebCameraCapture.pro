@@ -8,7 +8,7 @@ CONFIG -= visage
 CONFIG -= ffmpeg
 
 QT += core gui multimedia widgets multimediawidgets opengl
-TARGET = LAUWebCamerarCapture
+TARGET = LAUWebCamerasCapture
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -101,9 +101,9 @@ win32 {
 
     INCLUDEPATH   += $$quote(C:/usr/opencv/include)
     DEPENDPATH    += $$quote(C:/usr/opencv/include)
-    LIBS          += -L$$quote(C:/usr/opencv/x64/vc15/lib)
-    CONFIG(release, debug|release): LIBS += -lopencv_core411 -lopencv_objdetect411 -lopencv_imgproc411 -lopencv_calib3d411 -lopencv_highgui411 -lopencv_ml411 -lopencv_face411 -lopencv_videoio411
-    CONFIG(debug, debug|release):   LIBS += -lopencv_core411d -lopencv_objdetect411d -lopencv_imgproc411d -lopencv_calib3d411d -lopencv_highgui411d -lopencv_ml411d -lopencv_face411d -lopencv_videoio411d
+    LIBS          += -L$$quote(C:/usr/opencv/x64/vc17/lib)
+    CONFIG(release, debug|release): LIBS += -lopencv_core490 -lopencv_objdetect490 -lopencv_imgproc490 -lopencv_calib3d490 -lopencv_highgui490 -lopencv_ml490 -lopencv_face490 -lopencv_videoio490
+    CONFIG(debug, debug|release):   LIBS += -lopencv_core490d -lopencv_objdetect490d -lopencv_imgproc490d -lopencv_calib3d490d -lopencv_highgui490d -lopencv_ml490d -lopencv_face490d -lopencv_videoio490d
 
     # GET WINDOWS LIBRARIES FROM https://github.com/mcmtroffaes/ffmpeg-msvc-build
     ffmpeg {
